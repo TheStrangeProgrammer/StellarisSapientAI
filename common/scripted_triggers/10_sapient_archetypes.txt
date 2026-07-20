@@ -308,6 +308,7 @@ sapient_unity_cg_t1 = {
 
 sapient_unity_cg_t2 = {
 	sapient_unity_input_is_cg = yes
+	num_ascension_perks < 6
 	has_technology = tech_galactic_bureaucracy
 	OR = {
 		has_monthly_income = { resource = rare_crystals value > 0 }
@@ -326,6 +327,7 @@ sapient_unity_energy_t1 = {
 
 sapient_unity_energy_t2 = {
 	sapient_unity_input_is_energy = yes
+	num_ascension_perks < 6
 	has_technology = tech_galactic_bureaucracy
 	OR = {
 		has_monthly_income = { resource = rare_crystals value > 0 }
@@ -344,6 +346,7 @@ sapient_unity_food_t1 = {
 
 sapient_unity_food_t2 = {
 	sapient_unity_input_is_food = yes
+	num_ascension_perks < 6
 	has_technology = tech_hive_confluence
 	OR = {
 		has_monthly_income = { resource = exotic_gases value > 0 }
@@ -362,6 +365,7 @@ sapient_unity_minerals_t1 = {
 
 sapient_unity_minerals_t2 = {
 	sapient_unity_input_is_minerals = yes
+	num_ascension_perks < 6
 	has_technology = tech_hive_confluence
 	OR = {
 		has_monthly_income = { resource = exotic_gases value > 0 }
@@ -384,4 +388,24 @@ sapient_cg_chain_food = {
 	sapient_industry_input_is_food = yes
 	country_uses_consumer_goods = yes
 	NOT = { has_valid_civic = civic_machine_obsessional_directive }
+}
+
+
+# --- Trade tier gates (06_trade_buildings.txt: megaplex/stock exchange
+#     upkeep rare_crystals at tier 2+; tech names verified) -----------------
+sapient_trade_t1 = {
+	is_gestalt = no
+	has_technology = tech_interstellar_economics
+	OR = {
+		has_monthly_income = { resource = rare_crystals value > 0 }
+		resource_stockpile_compare = { resource = rare_crystals value > 200 }
+	}
+}
+sapient_trade_t2 = {
+	is_gestalt = no
+	has_technology = tech_galactic_markets
+	OR = {
+		has_monthly_income = { resource = rare_crystals value > 0 }
+		resource_stockpile_compare = { resource = rare_crystals value > 200 }
+	}
 }

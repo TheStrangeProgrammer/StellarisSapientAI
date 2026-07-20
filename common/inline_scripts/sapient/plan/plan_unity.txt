@@ -156,3 +156,18 @@ inline_script = {
 	IN_STEP = 8
 	OUT_LIMIT = @sapient_unity_ceiling
 }
+
+
+# Early-game arc: unity has faster returns than tech until ascension perks
+# land, then it coasts (top-tier chains taper via num_ascension_perks < 6 in
+# their gates). This subplan front-loads unity ambition while perks are young.
+
+subplan = {
+	set_name = "Sapient Early Unity Focus"
+	potential = {
+		num_ascension_perks < 3
+	}
+	income = {
+		unity = 20
+	}
+}

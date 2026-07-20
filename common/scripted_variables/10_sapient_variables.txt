@@ -13,3 +13,4 @@
 @sapient_trade_ceiling_megacorp = 1500
 @sapient_sr_ceiling = 30
 @sapient_exotic_ceiling = 10
+@sapient_energy_ceiling = 600

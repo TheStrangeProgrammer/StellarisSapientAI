@@ -1,4 +1,11 @@
-# SapientAI — energy demand (vanilla behavior, relocated)
+# SapientAI — energy demand
+# Vanilla behavior relocated, with ONE change: the scaling rail. Vanilla capped
+# energy ambition at 100 — but building upkeep alone is 2/5/8 energy per tier
+# (@b1/2/3_upkeep), so a mature empire pays hundreds in maintenance before a
+# single ship. Rail raised to @sapient_energy_ceiling; still deliberately low
+# relative to alloys/research (energy is a utility, not a goal), and machine
+# empires' real energy demand rides the research/unity chain couplings, which
+# are uncapped by design. Nomad variants untouched.
 
 subplan = {
 	potential = {
@@ -27,7 +34,7 @@ subplan = {
 		OR = {
 			NOR = {
 				is_nomadic = yes
-				has_monthly_income = { resource = energy value >= @economic_plan_scaling_energy_limit }
+				has_monthly_income = { resource = energy value >= @sapient_energy_ceiling }
 				resource_stockpile_compare = {
 					resource = energy
 					value > @economic_plan_stockpile_threshold_high
@@ -47,7 +54,7 @@ subplan = {
 	potential = {
 		NOR = {
 			is_nomadic = no
-			has_monthly_income = { resource = energy value <= @economic_plan_scaling_energy_limit_nomads }
+			has_monthly_income = { resource = energy value <= @sapient_energy_ceiling_nomads }
 		}
 	}
 

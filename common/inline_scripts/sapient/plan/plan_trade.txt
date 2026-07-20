@@ -35,3 +35,38 @@ subplan = {
 		trade = 15
 	}
 }
+
+
+# Tier scaling: trade buildings past tier 1 upkeep rare_crystals, so tier
+# demand couples a crystal trickle (audit fix — we'd checked jobs, not
+# buildings; clerk is free but the megaplex is not).
+
+subplan = {
+	optional = yes
+	scaling = yes
+	set_name = "Sapient Trade T1"
+	potential = {
+		sapient_trade_t1 = yes
+		has_monthly_income = { resource = trade value < @sapient_trade_ceiling_megacorp }
+		meets_basic_resource_thresholds = yes
+	}
+	income = {
+		trade = 5
+		rare_crystals = 1
+	}
+}
+
+subplan = {
+	optional = yes
+	scaling = yes
+	set_name = "Sapient Trade T2"
+	potential = {
+		sapient_trade_t2 = yes
+		has_monthly_income = { resource = trade value < @sapient_trade_ceiling_megacorp }
+		meets_basic_resource_thresholds = yes
+	}
+	income = {
+		trade = 5
+		rare_crystals = 1
+	}
+}

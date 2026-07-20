@@ -1,0 +1,36 @@
+# SapientAI — trade demand
+# Trade has no input chain (clerk: 3 trade, zero upkeep) — its value is
+# downstream: market conversion supplements resources and SRs, and megacorps
+# monetize it directly. So: treadmills with per-identity ceilings, no chains.
+# The trade->SR supplement logic belongs to the BUDGET layer (market buys),
+# not the plan layer — noted for the budget rewrite.
+
+subplan = {
+	scaling = yes
+	set_name = "Sapient Trade Scaling"
+	potential = {
+		is_megacorp = no
+		NOR = {
+			has_monthly_income = { resource = trade value >= @sapient_trade_ceiling }
+			resource_stockpile_compare = { resource = trade value > @economic_plan_stockpile_threshold_very_high }
+		}
+	}
+	income = {
+		trade = 10
+	}
+}
+
+subplan = {
+	scaling = yes
+	set_name = "Sapient Trade Scaling (Megacorp)"
+	potential = {
+		is_megacorp = yes
+		NOR = {
+			has_monthly_income = { resource = trade value >= @sapient_trade_ceiling_megacorp }
+			resource_stockpile_compare = { resource = trade value > @economic_plan_stockpile_threshold_very_high }
+		}
+	}
+	income = {
+		trade = 15
+	}
+}

@@ -1,0 +1,15 @@
+# SapientAI — tuning variables
+# Ceilings are safety rails, not growth schedules: scaling is a treadmill
+# (target = income + step), so pacing comes from coupled input demand and the
+# basic-resource / stockpile brakes, not from staged ceilings.
+@sapient_catalytic_food_base = 30
+@sapient_construction_minerals_limit = 250
+@sapient_alloy_ceiling = 2000
+@sapient_cg_ceiling = 400
+@sapient_bioship_food_limit = 4000
+@sapient_research_ceiling = 5000
+@sapient_unity_ceiling = 1000
+@sapient_trade_ceiling = 300
+@sapient_trade_ceiling_megacorp = 1500
+@sapient_sr_ceiling = 30
+@sapient_exotic_ceiling = 10

@@ -1,0 +1,49 @@
+# SapientAI — naval capacity demand
+# Vanilla shipped ONE optional naval subplan for every empire. Split by intent
+# (all identifiers verified in vanilla 4.4.4):
+#   base        — everyone, non-optional: a navy is not optional in Stellaris
+#   militarist  — ethic_militarist / fanatic: extra standing ambition
+#   predatory   — is_homicidal (purifiers/swarm/exterminators), cordyceptic
+#                 drones, Nemesis: buildup starts EARLIER (lower used-capacity
+#                 threshold) and pulls harder; these empires are their fleets
+
+subplan = {
+	scaling = yes
+	set_name = "Sapient Naval Cap Scaling"
+	potential = {
+		used_naval_capacity_percent > 0.85
+		meets_basic_resource_thresholds = yes
+	}
+	naval_cap = 100
+}
+
+subplan = {
+	optional = yes
+	scaling = yes
+	set_name = "Sapient Naval Cap Scaling (Militarist)"
+	potential = {
+		OR = {
+			has_ethic = ethic_militarist
+			has_ethic = ethic_fanatic_militarist
+		}
+		used_naval_capacity_percent > 0.8
+		meets_basic_resource_thresholds = yes
+	}
+	naval_cap = 100
+}
+
+subplan = {
+	optional = yes
+	scaling = yes
+	set_name = "Sapient Naval Cap Scaling (Predatory)"
+	potential = {
+		OR = {
+			is_homicidal = yes
+			has_valid_civic = civic_hive_cordyceptic_drones
+			has_ascension_perk = ap_become_the_crisis
+		}
+		used_naval_capacity_percent > 0.7
+		meets_basic_resource_thresholds = yes
+	}
+	naval_cap = 200
+}

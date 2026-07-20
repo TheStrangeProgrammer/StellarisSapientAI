@@ -1,0 +1,82 @@
+# SapientAI — food demand: three distinct consumers, one file
+#   1. eating (vanilla, uses_food)
+#   2. industry input, catalytic archetype: base floor here, scaling inside the
+#      alloy/CG chains (plan_alloys/plan_cg)
+#   3. SHIPBUILDING, bioship empires: food is their alloys. Vanilla caps this at
+#      500 while a normal late empire wants 1000+ alloys — a bioship fleet needs
+#      food income at alloy scale (~4k late-game). Basic tier raises the ceiling
+#      to @sapient_bioship_food_limit; the ladder tiers must continue the climb.
+
+subplan = {
+	set_name = "Base Food"
+	potential = {
+		country_uses_bio_ships = no
+		country_uses_food = yes
+	}
+	
+	income = {
+		food = @economic_plan_food_target
+	}
+}
+
+subplan = {
+	scaling = yes
+	set_name = "Base Food Scaling"
+	potential = {
+		country_uses_bio_ships = no
+		country_uses_food = yes
+		OR = {
+			NOR = {
+				has_monthly_income = { resource = food value >= @economic_plan_scaling_food_limit }
+				resource_stockpile_compare = {
+					resource = food
+					value > @economic_plan_stockpile_threshold_high
+				}
+			}
+		}
+	}
+
+	income = {
+		food = 20
+	}
+}
+
+subplan = {
+	set_name = "Base Food (Bioship)"
+	potential = {
+		country_uses_bio_ships = yes
+	}
+
+	income = {
+		food = @economic_plan_bio_ships_empire_food_target
+	}
+}
+
+subplan = {
+	scaling = yes
+	set_name = "Base Food Scaling (Bioship)"
+	potential = {
+		country_uses_bio_ships = yes
+		NOR = {
+			has_monthly_income = { resource = food value >= @sapient_bioship_food_limit }
+			resource_stockpile_compare = {
+				resource = food
+				value > @economic_plan_stockpile_threshold_high
+			}
+		}
+	}
+
+	income = {
+		food = 50
+	}
+}
+
+subplan = {
+	set_name = "Sapient Industrial Food Base"
+	potential = {
+		sapient_industry_input_is_food = yes
+	}
+	income = {
+		food = @sapient_catalytic_food_base
+	}
+}

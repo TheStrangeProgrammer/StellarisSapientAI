@@ -1,0 +1,25 @@
+# SapientAI — pop demand (relocated from misc)
+# Both subplans stay OPTIONAL and vanilla-valued pending the observer probe on
+# whether the pops goal drives anything at all (open question). If it proves
+# live, this file is where per-archetype growth ambition gets built; if inert,
+# the bootstrap designation/automation modules carry pop growth alone.
+
+subplan = {
+	optional = yes
+	set_name = "Base Pops"
+	potential = {
+		is_nomadic = no
+	}
+	pops = @economic_plan_pops_target
+}
+
+subplan = {
+	optional = yes
+	scaling = yes
+	set_name = "Scaling Pops"
+	potential = {
+		is_nomadic = no
+		meets_basic_resource_thresholds = yes
+	}
+	pops = @economic_plan_scaling_pops_target
+}

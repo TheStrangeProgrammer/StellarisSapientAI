@@ -1,0 +1,57 @@
+# SapientAI — energy demand (vanilla behavior, relocated)
+
+subplan = {
+	potential = {
+		is_nomadic = no
+	}
+	set_name = "Base Energy"
+	income = {
+		energy = @economic_plan_energy_target
+	}
+}
+
+subplan = {
+	potential = {
+		is_nomadic = yes
+	}
+	set_name = "Base Energy Nomads"
+	income = {
+		energy = @economic_plan_energy_target_nomads
+	}
+}
+
+subplan = {
+	scaling = yes
+	set_name = "Base Energy Scaling"
+	potential = {
+		OR = {
+			NOR = {
+				is_nomadic = yes
+				has_monthly_income = { resource = energy value >= @economic_plan_scaling_energy_limit }
+				resource_stockpile_compare = {
+					resource = energy
+					value > @economic_plan_stockpile_threshold_high
+				}
+			}
+		}
+	}
+
+	income = {
+		energy = 10
+	}
+}
+
+subplan = {
+	scaling = yes
+	set_name = "Base Energy Scaling Nomads"
+	potential = {
+		NOR = {
+			is_nomadic = no
+			has_monthly_income = { resource = energy value <= @economic_plan_scaling_energy_limit_nomads }
+		}
+	}
+
+	income = {
+		energy = -10
+	}
+}

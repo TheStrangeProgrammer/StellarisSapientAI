@@ -1,0 +1,368 @@
+# SapientAI — L0: input archetypes and stage gates
+#
+# ALL numbers below verified against pop_jobs with a depth-aware parser that
+# asserts extracted-block count == raw-text count (the previous regex silently
+# dropped nested-trigger upkeep blocks and this file briefly contained an
+# invented "pop sustenance" model as a result — see repo history).
+#
+# INDUSTRY input (foundry/artisan): minerals | food (catalytic).
+# RESEARCH input (calculator_* jobs, all three disciplines identical):
+#   individualist CG 1.5/3 | machine energy 3/3 | hive minerals 4/3
+#   (lithoid-INDEPENDENT for research).
+# UNITY input (bureaucrat / coordinator):
+#   individualist CG 2/3 | machine energy 4/3
+#   hive-bio food 2 + energy 2 /3 | hive lithoid-or-infernal minerals 2 + energy 2 /3
+#   (unity DOES split on is_lithoid_or_infernal_empire — vanilla trigger).
+
+sapient_industry_input_is_minerals = {
+	is_catalytic_empire = no
+}
+sapient_industry_input_is_food = {
+	is_catalytic_empire = yes
+}
+
+sapient_research_input_is_cg = {
+	country_uses_consumer_goods = yes
+}
+sapient_research_input_is_energy = {
+	is_machine_empire = yes
+}
+sapient_research_input_is_minerals = {
+	is_hive_empire = yes
+}
+
+sapient_unity_input_is_cg = {
+	country_uses_consumer_goods = yes
+}
+sapient_unity_input_is_energy = {
+	is_machine_empire = yes
+}
+sapient_unity_input_is_food = {
+	is_hive_empire = yes
+	is_lithoid_or_infernal_empire = no
+}
+sapient_unity_input_is_minerals = {
+	is_hive_empire = yes
+	is_lithoid_or_infernal_empire = yes
+}
+
+# --- Per-chain tech stages (industry) -------------------------------------
+sapient_alloy_tech_1 = {
+	has_technology = tech_alloys_1
+}
+sapient_alloy_tech_2 = {
+	has_technology = tech_alloys_2
+}
+sapient_cg_tech_1 = {
+	has_technology = tech_luxuries_1
+}
+sapient_cg_tech_2 = {
+	has_technology = tech_luxuries_2
+}
+
+
+sapient_alloys_minerals_t1 = {
+	sapient_industry_input_is_minerals = yes
+	has_technology = tech_alloys_1
+	OR = {
+		has_monthly_income = { resource = volatile_motes value > 0 }
+		resource_stockpile_compare = { resource = volatile_motes value > 200 }
+	}
+}
+
+sapient_alloys_minerals_t2 = {
+	sapient_industry_input_is_minerals = yes
+	has_technology = tech_alloys_2
+	OR = {
+		has_monthly_income = { resource = volatile_motes value > 0 }
+		resource_stockpile_compare = { resource = volatile_motes value > 200 }
+	}
+}
+
+sapient_cg_minerals_t1 = {
+	sapient_industry_input_is_minerals = yes
+	has_technology = tech_luxuries_1
+	OR = {
+		has_monthly_income = { resource = rare_crystals value > 0 }
+		resource_stockpile_compare = { resource = rare_crystals value > 200 }
+	}
+}
+
+sapient_cg_minerals_t2 = {
+	sapient_industry_input_is_minerals = yes
+	has_technology = tech_luxuries_2
+	OR = {
+		has_monthly_income = { resource = rare_crystals value > 0 }
+		resource_stockpile_compare = { resource = rare_crystals value > 200 }
+	}
+}
+
+sapient_alloys_food_t1 = {
+	sapient_industry_input_is_food = yes
+	has_technology = tech_alloys_1
+	OR = {
+		has_monthly_income = { resource = volatile_motes value > 0 }
+		resource_stockpile_compare = { resource = volatile_motes value > 200 }
+	}
+}
+
+sapient_alloys_food_t2 = {
+	sapient_industry_input_is_food = yes
+	has_technology = tech_alloys_2
+	OR = {
+		has_monthly_income = { resource = volatile_motes value > 0 }
+		resource_stockpile_compare = { resource = volatile_motes value > 200 }
+	}
+}
+
+sapient_cg_food_t1 = {
+	sapient_industry_input_is_food = yes
+	has_technology = tech_luxuries_1
+	OR = {
+		has_monthly_income = { resource = rare_crystals value > 0 }
+		resource_stockpile_compare = { resource = rare_crystals value > 200 }
+	}
+}
+
+sapient_cg_food_t2 = {
+	sapient_industry_input_is_food = yes
+	has_technology = tech_luxuries_2
+	OR = {
+		has_monthly_income = { resource = rare_crystals value > 0 }
+		resource_stockpile_compare = { resource = rare_crystals value > 200 }
+	}
+}
+
+sapient_res_physics_cg_t1 = {
+	sapient_research_input_is_cg = yes
+	has_technology = tech_physics_2
+	OR = {
+		has_monthly_income = { resource = volatile_motes value > 0 }
+		resource_stockpile_compare = { resource = volatile_motes value > 200 }
+	}
+}
+
+sapient_res_physics_cg_t2 = {
+	sapient_research_input_is_cg = yes
+	has_technology = tech_physics_3
+	OR = {
+		has_monthly_income = { resource = volatile_motes value > 0 }
+		resource_stockpile_compare = { resource = volatile_motes value > 200 }
+	}
+}
+
+sapient_res_society_cg_t1 = {
+	sapient_research_input_is_cg = yes
+	has_technology = tech_society_2
+	OR = {
+		has_monthly_income = { resource = exotic_gases value > 0 }
+		resource_stockpile_compare = { resource = exotic_gases value > 200 }
+	}
+}
+
+sapient_res_society_cg_t2 = {
+	sapient_research_input_is_cg = yes
+	has_technology = tech_society_3
+	OR = {
+		has_monthly_income = { resource = exotic_gases value > 0 }
+		resource_stockpile_compare = { resource = exotic_gases value > 200 }
+	}
+}
+
+sapient_res_engineering_cg_t1 = {
+	sapient_research_input_is_cg = yes
+	has_technology = tech_basic_science_lab_2
+	OR = {
+		has_monthly_income = { resource = exotic_gases value > 0 }
+		resource_stockpile_compare = { resource = exotic_gases value > 200 }
+	}
+}
+
+sapient_res_engineering_cg_t2 = {
+	sapient_research_input_is_cg = yes
+	has_technology = tech_basic_science_lab_3
+	OR = {
+		has_monthly_income = { resource = exotic_gases value > 0 }
+		resource_stockpile_compare = { resource = exotic_gases value > 200 }
+	}
+}
+
+sapient_res_physics_energy_t1 = {
+	sapient_research_input_is_energy = yes
+	has_technology = tech_physics_2
+	OR = {
+		has_monthly_income = { resource = volatile_motes value > 0 }
+		resource_stockpile_compare = { resource = volatile_motes value > 200 }
+	}
+}
+
+sapient_res_physics_energy_t2 = {
+	sapient_research_input_is_energy = yes
+	has_technology = tech_physics_3
+	OR = {
+		has_monthly_income = { resource = volatile_motes value > 0 }
+		resource_stockpile_compare = { resource = volatile_motes value > 200 }
+	}
+}
+
+sapient_res_society_energy_t1 = {
+	sapient_research_input_is_energy = yes
+	has_technology = tech_society_2
+	OR = {
+		has_monthly_income = { resource = exotic_gases value > 0 }
+		resource_stockpile_compare = { resource = exotic_gases value > 200 }
+	}
+}
+
+sapient_res_society_energy_t2 = {
+	sapient_research_input_is_energy = yes
+	has_technology = tech_society_3
+	OR = {
+		has_monthly_income = { resource = exotic_gases value > 0 }
+		resource_stockpile_compare = { resource = exotic_gases value > 200 }
+	}
+}
+
+sapient_res_engineering_energy_t1 = {
+	sapient_research_input_is_energy = yes
+	has_technology = tech_basic_science_lab_2
+	OR = {
+		has_monthly_income = { resource = exotic_gases value > 0 }
+		resource_stockpile_compare = { resource = exotic_gases value > 200 }
+	}
+}
+
+sapient_res_engineering_energy_t2 = {
+	sapient_research_input_is_energy = yes
+	has_technology = tech_basic_science_lab_3
+	OR = {
+		has_monthly_income = { resource = exotic_gases value > 0 }
+		resource_stockpile_compare = { resource = exotic_gases value > 200 }
+	}
+}
+
+sapient_res_physics_minerals_t1 = {
+	sapient_research_input_is_minerals = yes
+	has_technology = tech_physics_2
+	OR = {
+		has_monthly_income = { resource = volatile_motes value > 0 }
+		resource_stockpile_compare = { resource = volatile_motes value > 200 }
+	}
+}
+
+sapient_res_physics_minerals_t2 = {
+	sapient_research_input_is_minerals = yes
+	has_technology = tech_physics_3
+	OR = {
+		has_monthly_income = { resource = volatile_motes value > 0 }
+		resource_stockpile_compare = { resource = volatile_motes value > 200 }
+	}
+}
+
+sapient_res_society_minerals_t1 = {
+	sapient_research_input_is_minerals = yes
+	has_technology = tech_society_2
+	OR = {
+		has_monthly_income = { resource = exotic_gases value > 0 }
+		resource_stockpile_compare = { resource = exotic_gases value > 200 }
+	}
+}
+
+sapient_res_society_minerals_t2 = {
+	sapient_research_input_is_minerals = yes
+	has_technology = tech_society_3
+	OR = {
+		has_monthly_income = { resource = exotic_gases value > 0 }
+		resource_stockpile_compare = { resource = exotic_gases value > 200 }
+	}
+}
+
+sapient_res_engineering_minerals_t1 = {
+	sapient_research_input_is_minerals = yes
+	has_technology = tech_basic_science_lab_2
+	OR = {
+		has_monthly_income = { resource = exotic_gases value > 0 }
+		resource_stockpile_compare = { resource = exotic_gases value > 200 }
+	}
+}
+
+sapient_res_engineering_minerals_t2 = {
+	sapient_research_input_is_minerals = yes
+	has_technology = tech_basic_science_lab_3
+	OR = {
+		has_monthly_income = { resource = exotic_gases value > 0 }
+		resource_stockpile_compare = { resource = exotic_gases value > 200 }
+	}
+}
+
+sapient_unity_cg_t1 = {
+	sapient_unity_input_is_cg = yes
+	has_technology = tech_colonial_bureaucracy
+	OR = {
+		has_monthly_income = { resource = rare_crystals value > 0 }
+		resource_stockpile_compare = { resource = rare_crystals value > 200 }
+	}
+}
+
+sapient_unity_cg_t2 = {
+	sapient_unity_input_is_cg = yes
+	has_technology = tech_galactic_bureaucracy
+	OR = {
+		has_monthly_income = { resource = rare_crystals value > 0 }
+		resource_stockpile_compare = { resource = rare_crystals value > 200 }
+	}
+}
+
+sapient_unity_energy_t1 = {
+	sapient_unity_input_is_energy = yes
+	has_technology = tech_colonial_bureaucracy
+	OR = {
+		has_monthly_income = { resource = rare_crystals value > 0 }
+		resource_stockpile_compare = { resource = rare_crystals value > 200 }
+	}
+}
+
+sapient_unity_energy_t2 = {
+	sapient_unity_input_is_energy = yes
+	has_technology = tech_galactic_bureaucracy
+	OR = {
+		has_monthly_income = { resource = rare_crystals value > 0 }
+		resource_stockpile_compare = { resource = rare_crystals value > 200 }
+	}
+}
+
+sapient_unity_food_t1 = {
+	sapient_unity_input_is_food = yes
+	has_technology = tech_hive_cluster
+	OR = {
+		has_monthly_income = { resource = exotic_gases value > 0 }
+		resource_stockpile_compare = { resource = exotic_gases value > 200 }
+	}
+}
+
+sapient_unity_food_t2 = {
+	sapient_unity_input_is_food = yes
+	has_technology = tech_hive_confluence
+	OR = {
+		has_monthly_income = { resource = exotic_gases value > 0 }
+		resource_stockpile_compare = { resource = exotic_gases value > 200 }
+	}
+}
+
+sapient_unity_minerals_t1 = {
+	sapient_unity_input_is_minerals = yes
+	has_technology = tech_hive_cluster
+	OR = {
+		has_monthly_income = { resource = exotic_gases value > 0 }
+		resource_stockpile_compare = { resource = exotic_gases value > 200 }
+	}
+}
+
+sapient_unity_minerals_t2 = {
+	sapient_unity_input_is_minerals = yes
+	has_technology = tech_hive_confluence
+	OR = {
+		has_monthly_income = { resource = exotic_gases value > 0 }
+		resource_stockpile_compare = { resource = exotic_gases value > 200 }
+	}
+}

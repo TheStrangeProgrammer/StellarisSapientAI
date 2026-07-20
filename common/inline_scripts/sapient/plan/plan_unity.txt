@@ -1,0 +1,158 @@
+# SapientAI — unity chains (verified: bureaucrat & coordinator)
+# individualist 2 CG /3 unity -> step 8. Machine 4 energy /3 -> 17.
+# Hive DUAL upkeep: (food|minerals) 2 + energy 2 per 3 unity -> primary 8 via
+# INPUT, energy 8 via the SR slot on the base chain (third income line).
+# Staged tiers keep primary input + their SR; the energy line rides only on the
+# base chain — slight undercoupling at high tiers, deliberate and commented.
+
+inline_script = {
+	script = sapient/production_chain
+	NAME = "Sapient Unity Chain (CG)"
+	GATE = sapient_unity_input_is_cg
+	OUTPUT = unity
+	INPUT = consumer_goods
+	OUT_STEP = 10
+	IN_STEP = 8
+	OUT_LIMIT = @sapient_unity_ceiling
+}
+
+inline_script = {
+	script = sapient/production_chain
+	NAME = "Sapient Unity Chain (Machine)"
+	GATE = sapient_unity_input_is_energy
+	OUTPUT = unity
+	INPUT = energy
+	OUT_STEP = 10
+	IN_STEP = 17
+	OUT_LIMIT = @sapient_unity_ceiling
+}
+
+inline_script = {
+	script = sapient/production_chain_sr
+	NAME = "Sapient Unity Chain (Hive Bio)"
+	GATE = sapient_unity_input_is_food
+	OUTPUT = unity
+	INPUT = food
+	SR = energy
+	SR_STEP = 8
+	OUT_STEP = 10
+	IN_STEP = 8
+	OUT_LIMIT = @sapient_unity_ceiling
+}
+
+inline_script = {
+	script = sapient/production_chain_sr
+	NAME = "Sapient Unity Chain (Hive Lithoid)"
+	GATE = sapient_unity_input_is_minerals
+	OUTPUT = unity
+	INPUT = minerals
+	SR = energy
+	SR_STEP = 8
+	OUT_STEP = 10
+	IN_STEP = 8
+	OUT_LIMIT = @sapient_unity_ceiling
+}
+
+inline_script = {
+	script = sapient/production_chain_sr
+	NAME = "Sapient Unity T1 (CG)"
+	GATE = sapient_unity_cg_t1
+	OUTPUT = unity
+	INPUT = consumer_goods
+	SR = rare_crystals
+	SR_STEP = 1
+	OUT_STEP = 10
+	IN_STEP = 8
+	OUT_LIMIT = @sapient_unity_ceiling
+}
+
+inline_script = {
+	script = sapient/production_chain_sr
+	NAME = "Sapient Unity T2 (CG)"
+	GATE = sapient_unity_cg_t2
+	OUTPUT = unity
+	INPUT = consumer_goods
+	SR = rare_crystals
+	SR_STEP = 1
+	OUT_STEP = 10
+	IN_STEP = 8
+	OUT_LIMIT = @sapient_unity_ceiling
+}
+
+inline_script = {
+	script = sapient/production_chain_sr
+	NAME = "Sapient Unity T1 (ENERGY)"
+	GATE = sapient_unity_energy_t1
+	OUTPUT = unity
+	INPUT = energy
+	SR = rare_crystals
+	SR_STEP = 1
+	OUT_STEP = 10
+	IN_STEP = 17
+	OUT_LIMIT = @sapient_unity_ceiling
+}
+
+inline_script = {
+	script = sapient/production_chain_sr
+	NAME = "Sapient Unity T2 (ENERGY)"
+	GATE = sapient_unity_energy_t2
+	OUTPUT = unity
+	INPUT = energy
+	SR = rare_crystals
+	SR_STEP = 1
+	OUT_STEP = 10
+	IN_STEP = 17
+	OUT_LIMIT = @sapient_unity_ceiling
+}
+
+inline_script = {
+	script = sapient/production_chain_sr
+	NAME = "Sapient Unity T1 (FOOD)"
+	GATE = sapient_unity_food_t1
+	OUTPUT = unity
+	INPUT = food
+	SR = exotic_gases
+	SR_STEP = 1
+	OUT_STEP = 10
+	IN_STEP = 8
+	OUT_LIMIT = @sapient_unity_ceiling
+}
+
+inline_script = {
+	script = sapient/production_chain_sr
+	NAME = "Sapient Unity T2 (FOOD)"
+	GATE = sapient_unity_food_t2
+	OUTPUT = unity
+	INPUT = food
+	SR = exotic_gases
+	SR_STEP = 1
+	OUT_STEP = 10
+	IN_STEP = 8
+	OUT_LIMIT = @sapient_unity_ceiling
+}
+
+inline_script = {
+	script = sapient/production_chain_sr
+	NAME = "Sapient Unity T1 (MINERALS)"
+	GATE = sapient_unity_minerals_t1
+	OUTPUT = unity
+	INPUT = minerals
+	SR = exotic_gases
+	SR_STEP = 1
+	OUT_STEP = 10
+	IN_STEP = 8
+	OUT_LIMIT = @sapient_unity_ceiling
+}
+
+inline_script = {
+	script = sapient/production_chain_sr
+	NAME = "Sapient Unity T2 (MINERALS)"
+	GATE = sapient_unity_minerals_t2
+	OUTPUT = unity
+	INPUT = minerals
+	SR = exotic_gases
+	SR_STEP = 1
+	OUT_STEP = 10
+	IN_STEP = 8
+	OUT_LIMIT = @sapient_unity_ceiling
+}

@@ -1,0 +1,40 @@
+# SapientAI — mineral demand
+# Industry input minerals live in the alloy/CG chains (plan_alloys/plan_cg);
+# this file owns construction demand (archetype-neutral) and nomad/crisis variants.
+
+inline_script = {
+	script = sapient/industrial_input_scaling
+	NAME = "Sapient Construction Minerals Scaling"
+	GATE = always
+	RESOURCE = minerals
+	STEP = 10
+	LIMIT = @sapient_construction_minerals_limit
+}
+
+subplan = {
+	scaling = yes
+	set_name = "Base Minerals Scaling Nomads"
+	potential = {
+		NOR = {
+			is_nomadic = no
+			has_monthly_income = { resource = minerals value <= @economic_plan_scaling_minerals_limit_nomads }
+		}
+	}
+
+	income = {
+		minerals = -10
+	}
+}
+
+subplan = {
+	scaling = yes
+	set_name = "Galactic Nemesis Minerals Scaling"
+	potential = {
+		has_ascension_perk = ap_become_the_crisis
+		has_monthly_income = { resource = minerals value < 1000 }
+	}
+
+	income = {
+		minerals = 50
+	}
+}

@@ -1,0 +1,49 @@
+# SapientAI — basic economy plan (full replacement of vanilla 01_base.txt)
+# The plan is a manifest; all demand lives in per-resource inlines, each of
+# which defines that resource's production chains and conditional variants.
+
+basic_economy_plan = {
+	ai_weight = { weight = 1000 }
+
+	income = {
+		alloys = @economic_plan_alloy_target
+		physics_research = @economic_plan_research_target
+		society_research = @economic_plan_research_target
+		engineering_research = @economic_plan_research_target
+		unity = @economic_plan_unity_target
+		trade = @economic_plan_trade_target
+	}
+
+	subplan = {
+		potential = {
+			is_nomadic = no
+		}
+		set_name = "Base Minerals"
+		income = {
+			minerals = @economic_plan_mineral_target
+		}
+	}
+
+	subplan = {
+		potential = {
+			is_nomadic = yes
+		}
+		set_name = "Base Minerals & Energy Nomads"
+		income = {
+			minerals = @economic_plan_mineral_target_nomads
+			energy = @economic_plan_energy_target_nomads
+		}
+	}
+
+	inline_script = "sapient/plan/plan_minerals"
+	inline_script = "sapient/plan/plan_energy"
+	inline_script = "sapient/plan/plan_food"
+	inline_script = "sapient/plan/plan_alloys"
+	inline_script = "sapient/plan/plan_cg"
+	inline_script = "sapient/plan/plan_research"
+	inline_script = "sapient/plan/plan_unity"
+	inline_script = "sapient/plan/plan_trade"
+	inline_script = "sapient/plan/plan_pops"
+	inline_script = "sapient/plan/plan_naval"
+	inline_script = "sapient/plan/plan_strategic"
+}

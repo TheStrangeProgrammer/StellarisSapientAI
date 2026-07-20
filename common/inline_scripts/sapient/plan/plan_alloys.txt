@@ -1,0 +1,115 @@
+# SapientAI — alloy production chains
+# Coupled chains per input archetype (ratios from foundry_output.txt:
+# minerals 6->3 = 2.0, catalytic food 9->3.75 = 2.4; x1.25 latency buffer).
+# Bioship empires build ships from food (see plan_food) — their small remaining
+# alloy need keeps the vanilla subplan.
+
+subplan = {
+	set_name = "Base Alloys"
+	income = {
+		alloys = @economic_plan_alloy_target
+	}
+}
+
+inline_script = {
+	script = sapient/production_chain
+	NAME = "Sapient Alloy Chain (Minerals)"
+	GATE = sapient_industry_input_is_minerals
+	OUTPUT = alloys
+	INPUT = minerals
+	OUT_STEP = 10
+	IN_STEP = 25
+	OUT_LIMIT = @sapient_alloy_ceiling
+}
+
+inline_script = {
+	script = sapient/production_chain
+	NAME = "Sapient Alloy Chain (Food)"
+	GATE = sapient_industry_input_is_food
+	OUTPUT = alloys
+	INPUT = food
+	OUT_STEP = 10
+	IN_STEP = 30
+	OUT_LIMIT = @sapient_alloy_ceiling
+}
+
+subplan = {
+	scaling = yes
+	set_name = "Bioship Alloy Scaling"
+	potential = {
+		country_uses_bio_ships = yes
+		NOT = { has_ascension_perk = ap_become_the_crisis }
+		meets_basic_resource_thresholds = yes
+		has_monthly_income = { resource = alloys value < @economic_plan_scaling_alloy_bioship_limit }
+	}
+
+	income = {
+		alloys = 10
+	}
+}
+
+# Tech stages: pressure follows tech_alloys_1/2 AND motes solvency; stage
+# chains couple motes so SR demand grows with scale. Bootstrap demand below
+# is tech-gated only — it exists precisely while insolvent, to fix that.
+
+subplan = {
+	set_name = "Sapient Alloy SR Bootstrap"
+	potential = {
+		has_technology = tech_alloys_1
+	}
+	income = {
+		volatile_motes = 3
+	}
+}
+
+inline_script = {
+	script = sapient/production_chain_sr
+	NAME = "Sapient Alloy Chain T1 (Minerals)"
+	GATE = sapient_alloys_minerals_t1
+	OUTPUT = alloys
+	INPUT = minerals
+	SR = volatile_motes
+	OUT_STEP = 10
+	IN_STEP = 25
+	SR_STEP = 1
+	OUT_LIMIT = @sapient_alloy_ceiling
+}
+
+inline_script = {
+	script = sapient/production_chain_sr
+	NAME = "Sapient Alloy Chain T2 (Minerals)"
+	GATE = sapient_alloys_minerals_t2
+	OUTPUT = alloys
+	INPUT = minerals
+	SR = volatile_motes
+	OUT_STEP = 10
+	IN_STEP = 25
+	SR_STEP = 1
+	OUT_LIMIT = @sapient_alloy_ceiling
+}
+
+inline_script = {
+	script = sapient/production_chain_sr
+	NAME = "Sapient Alloy Chain T1 (Food)"
+	GATE = sapient_alloys_food_t1
+	OUTPUT = alloys
+	INPUT = food
+	SR = volatile_motes
+	OUT_STEP = 10
+	IN_STEP = 30
+	SR_STEP = 1
+	OUT_LIMIT = @sapient_alloy_ceiling
+}
+
+inline_script = {
+	script = sapient/production_chain_sr
+	NAME = "Sapient Alloy Chain T2 (Food)"
+	GATE = sapient_alloys_food_t2
+	OUTPUT = alloys
+	INPUT = food
+	SR = volatile_motes
+	OUT_STEP = 10
+	IN_STEP = 30
+	SR_STEP = 1
+	OUT_LIMIT = @sapient_alloy_ceiling
+}

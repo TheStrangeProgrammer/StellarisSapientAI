@@ -1,0 +1,9 @@
+# SapientAI — vanilla plan neutralized.
+# The entire economy runs through basic_economy_plan (01_base.txt): coupled
+# production chains with treadmill scaling replace the absolute-number ladder.
+# The plan name is preserved at weight 0 so nothing referencing it breaks and
+# no selection semantics can ever pick it.
+
+beyond_endgame_economy_plan = {
+	ai_weight = { weight = 0 }
+}

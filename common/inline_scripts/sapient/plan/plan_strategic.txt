@@ -1,0 +1,95 @@
+# SapientAI — strategic resources (replaces vanilla ai_strategic_resources)
+# Vanilla: optional, base 1/mo, scaling +0.2 to ceiling 10 — never gates
+# anything, which is how empires go a whole game producing zero gases.
+# Under Sapient the REAL SR demand lives in the chains (tier stages couple
+# motes/crystals/gases to industry, research and unity, with tech-gated
+# bootstraps). This file adds only:
+#   1. a small NON-optional refinable floor — every empire should hold a
+#      trickle of each refinable once anything demands it
+#   2. opportunistic exploitation scaling for sources the empire already has
+#   3. exotic-tier exploitation (zro / dark matter / living metal / nanites):
+#      these have no reliable production path, so demand is gated on already
+#      having income — exploit and stockpile what exists, never chase what
+#      doesn't. (Covers e.g. the Materiality engine physicist's sr_zro upkeep:
+#      an empire running it has zro income, so the exploitation subplan holds
+#      a buffer for it.)
+
+subplan = {
+	set_name = "Sapient Refinable Floor"
+	income = {
+		exotic_gases = 1
+		volatile_motes = 1
+		rare_crystals = 1
+	}
+}
+
+subplan = {
+	optional = yes
+	scaling = yes
+	set_name = "Sapient Refinable Exploitation"
+	potential = {
+		meets_basic_resource_thresholds = yes
+		NOR = {
+			has_monthly_income = { resource = exotic_gases value >= @sapient_sr_ceiling }
+			has_monthly_income = { resource = volatile_motes value >= @sapient_sr_ceiling }
+			has_monthly_income = { resource = rare_crystals value >= @sapient_sr_ceiling }
+		}
+	}
+	income = {
+		exotic_gases = 0.5
+		volatile_motes = 0.5
+		rare_crystals = 0.5
+	}
+}
+
+subplan = {
+	optional = yes
+	scaling = yes
+	set_name = "Sapient Zro Exploitation"
+	potential = {
+		has_monthly_income = { resource = sr_zro value > 0 }
+		has_monthly_income = { resource = sr_zro value < @sapient_exotic_ceiling }
+	}
+	income = {
+		sr_zro = 0.5
+	}
+}
+
+subplan = {
+	optional = yes
+	scaling = yes
+	set_name = "Sapient Dark Matter Exploitation"
+	potential = {
+		has_monthly_income = { resource = sr_dark_matter value > 0 }
+		has_monthly_income = { resource = sr_dark_matter value < @sapient_exotic_ceiling }
+	}
+	income = {
+		sr_dark_matter = 0.5
+	}
+}
+
+subplan = {
+	optional = yes
+	scaling = yes
+	set_name = "Sapient Living Metal Exploitation"
+	potential = {
+		has_monthly_income = { resource = sr_living_metal value > 0 }
+		has_monthly_income = { resource = sr_living_metal value < @sapient_exotic_ceiling }
+	}
+	income = {
+		sr_living_metal = 0.5
+	}
+}
+
+subplan = {
+	optional = yes
+	scaling = yes
+	set_name = "Sapient Nanites Exploitation"
+	potential = {
+		has_monthly_income = { resource = nanites value > 0 }
+		has_monthly_income = { resource = nanites value < @sapient_exotic_ceiling }
+	}
+	income = {
+		nanites = 0.5
+	}
+}

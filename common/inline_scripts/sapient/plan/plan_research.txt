@@ -1,0 +1,351 @@
+# SapientAI — research chains (three verified input archetypes)
+# calculator_* jobs, all disciplines: individualist 1.5 CG, machine 3 energy,
+# hive 4 minerals — each per 3 research; hive input is lithoid-INDEPENDENT.
+# IN_STEP per 10 research x1.25 buffer: CG 6 | energy 13 | minerals 17.
+# Lab SR tiers: physics motes; society/engineering gases.
+
+subplan = {
+	set_name = "Sapient Research SR Bootstrap (Gases)"
+	potential = {
+		OR = {
+			has_technology = tech_society_2
+			has_technology = tech_basic_science_lab_2
+		}
+	}
+	income = {
+		exotic_gases = 3
+	}
+}
+
+inline_script = {
+	script = sapient/production_chain
+	NAME = "Sapient Physics Chain (CG)"
+	GATE = sapient_research_input_is_cg
+	OUTPUT = physics_research
+	INPUT = consumer_goods
+	OUT_STEP = 10
+	IN_STEP = 6
+	OUT_LIMIT = @sapient_research_ceiling
+}
+
+inline_script = {
+	script = sapient/production_chain_sr
+	NAME = "Sapient Physics T1 (CG)"
+	GATE = sapient_res_physics_cg_t1
+	OUTPUT = physics_research
+	INPUT = consumer_goods
+	SR = volatile_motes
+	SR_STEP = 1
+	OUT_STEP = 10
+	IN_STEP = 6
+	OUT_LIMIT = @sapient_research_ceiling
+}
+
+inline_script = {
+	script = sapient/production_chain_sr
+	NAME = "Sapient Physics T2 (CG)"
+	GATE = sapient_res_physics_cg_t2
+	OUTPUT = physics_research
+	INPUT = consumer_goods
+	SR = volatile_motes
+	SR_STEP = 1
+	OUT_STEP = 10
+	IN_STEP = 6
+	OUT_LIMIT = @sapient_research_ceiling
+}
+
+inline_script = {
+	script = sapient/production_chain
+	NAME = "Sapient Physics Chain (ENERGY)"
+	GATE = sapient_research_input_is_energy
+	OUTPUT = physics_research
+	INPUT = energy
+	OUT_STEP = 10
+	IN_STEP = 13
+	OUT_LIMIT = @sapient_research_ceiling
+}
+
+inline_script = {
+	script = sapient/production_chain_sr
+	NAME = "Sapient Physics T1 (ENERGY)"
+	GATE = sapient_res_physics_energy_t1
+	OUTPUT = physics_research
+	INPUT = energy
+	SR = volatile_motes
+	SR_STEP = 1
+	OUT_STEP = 10
+	IN_STEP = 13
+	OUT_LIMIT = @sapient_research_ceiling
+}
+
+inline_script = {
+	script = sapient/production_chain_sr
+	NAME = "Sapient Physics T2 (ENERGY)"
+	GATE = sapient_res_physics_energy_t2
+	OUTPUT = physics_research
+	INPUT = energy
+	SR = volatile_motes
+	SR_STEP = 1
+	OUT_STEP = 10
+	IN_STEP = 13
+	OUT_LIMIT = @sapient_research_ceiling
+}
+
+inline_script = {
+	script = sapient/production_chain
+	NAME = "Sapient Physics Chain (MINERALS)"
+	GATE = sapient_research_input_is_minerals
+	OUTPUT = physics_research
+	INPUT = minerals
+	OUT_STEP = 10
+	IN_STEP = 17
+	OUT_LIMIT = @sapient_research_ceiling
+}
+
+inline_script = {
+	script = sapient/production_chain_sr
+	NAME = "Sapient Physics T1 (MINERALS)"
+	GATE = sapient_res_physics_minerals_t1
+	OUTPUT = physics_research
+	INPUT = minerals
+	SR = volatile_motes
+	SR_STEP = 1
+	OUT_STEP = 10
+	IN_STEP = 17
+	OUT_LIMIT = @sapient_research_ceiling
+}
+
+inline_script = {
+	script = sapient/production_chain_sr
+	NAME = "Sapient Physics T2 (MINERALS)"
+	GATE = sapient_res_physics_minerals_t2
+	OUTPUT = physics_research
+	INPUT = minerals
+	SR = volatile_motes
+	SR_STEP = 1
+	OUT_STEP = 10
+	IN_STEP = 17
+	OUT_LIMIT = @sapient_research_ceiling
+}
+
+inline_script = {
+	script = sapient/production_chain
+	NAME = "Sapient Society Chain (CG)"
+	GATE = sapient_research_input_is_cg
+	OUTPUT = society_research
+	INPUT = consumer_goods
+	OUT_STEP = 10
+	IN_STEP = 6
+	OUT_LIMIT = @sapient_research_ceiling
+}
+
+inline_script = {
+	script = sapient/production_chain_sr
+	NAME = "Sapient Society T1 (CG)"
+	GATE = sapient_res_society_cg_t1
+	OUTPUT = society_research
+	INPUT = consumer_goods
+	SR = exotic_gases
+	SR_STEP = 1
+	OUT_STEP = 10
+	IN_STEP = 6
+	OUT_LIMIT = @sapient_research_ceiling
+}
+
+inline_script = {
+	script = sapient/production_chain_sr
+	NAME = "Sapient Society T2 (CG)"
+	GATE = sapient_res_society_cg_t2
+	OUTPUT = society_research
+	INPUT = consumer_goods
+	SR = exotic_gases
+	SR_STEP = 1
+	OUT_STEP = 10
+	IN_STEP = 6
+	OUT_LIMIT = @sapient_research_ceiling
+}
+
+inline_script = {
+	script = sapient/production_chain
+	NAME = "Sapient Society Chain (ENERGY)"
+	GATE = sapient_research_input_is_energy
+	OUTPUT = society_research
+	INPUT = energy
+	OUT_STEP = 10
+	IN_STEP = 13
+	OUT_LIMIT = @sapient_research_ceiling
+}
+
+inline_script = {
+	script = sapient/production_chain_sr
+	NAME = "Sapient Society T1 (ENERGY)"
+	GATE = sapient_res_society_energy_t1
+	OUTPUT = society_research
+	INPUT = energy
+	SR = exotic_gases
+	SR_STEP = 1
+	OUT_STEP = 10
+	IN_STEP = 13
+	OUT_LIMIT = @sapient_research_ceiling
+}
+
+inline_script = {
+	script = sapient/production_chain_sr
+	NAME = "Sapient Society T2 (ENERGY)"
+	GATE = sapient_res_society_energy_t2
+	OUTPUT = society_research
+	INPUT = energy
+	SR = exotic_gases
+	SR_STEP = 1
+	OUT_STEP = 10
+	IN_STEP = 13
+	OUT_LIMIT = @sapient_research_ceiling
+}
+
+inline_script = {
+	script = sapient/production_chain
+	NAME = "Sapient Society Chain (MINERALS)"
+	GATE = sapient_research_input_is_minerals
+	OUTPUT = society_research
+	INPUT = minerals
+	OUT_STEP = 10
+	IN_STEP = 17
+	OUT_LIMIT = @sapient_research_ceiling
+}
+
+inline_script = {
+	script = sapient/production_chain_sr
+	NAME = "Sapient Society T1 (MINERALS)"
+	GATE = sapient_res_society_minerals_t1
+	OUTPUT = society_research
+	INPUT = minerals
+	SR = exotic_gases
+	SR_STEP = 1
+	OUT_STEP = 10
+	IN_STEP = 17
+	OUT_LIMIT = @sapient_research_ceiling
+}
+
+inline_script = {
+	script = sapient/production_chain_sr
+	NAME = "Sapient Society T2 (MINERALS)"
+	GATE = sapient_res_society_minerals_t2
+	OUTPUT = society_research
+	INPUT = minerals
+	SR = exotic_gases
+	SR_STEP = 1
+	OUT_STEP = 10
+	IN_STEP = 17
+	OUT_LIMIT = @sapient_research_ceiling
+}
+
+inline_script = {
+	script = sapient/production_chain
+	NAME = "Sapient Engineering Chain (CG)"
+	GATE = sapient_research_input_is_cg
+	OUTPUT = engineering_research
+	INPUT = consumer_goods
+	OUT_STEP = 10
+	IN_STEP = 6
+	OUT_LIMIT = @sapient_research_ceiling
+}
+
+inline_script = {
+	script = sapient/production_chain_sr
+	NAME = "Sapient Engineering T1 (CG)"
+	GATE = sapient_res_engineering_cg_t1
+	OUTPUT = engineering_research
+	INPUT = consumer_goods
+	SR = exotic_gases
+	SR_STEP = 1
+	OUT_STEP = 10
+	IN_STEP = 6
+	OUT_LIMIT = @sapient_research_ceiling
+}
+
+inline_script = {
+	script = sapient/production_chain_sr
+	NAME = "Sapient Engineering T2 (CG)"
+	GATE = sapient_res_engineering_cg_t2
+	OUTPUT = engineering_research
+	INPUT = consumer_goods
+	SR = exotic_gases
+	SR_STEP = 1
+	OUT_STEP = 10
+	IN_STEP = 6
+	OUT_LIMIT = @sapient_research_ceiling
+}
+
+inline_script = {
+	script = sapient/production_chain
+	NAME = "Sapient Engineering Chain (ENERGY)"
+	GATE = sapient_research_input_is_energy
+	OUTPUT = engineering_research
+	INPUT = energy
+	OUT_STEP = 10
+	IN_STEP = 13
+	OUT_LIMIT = @sapient_research_ceiling
+}
+
+inline_script = {
+	script = sapient/production_chain_sr
+	NAME = "Sapient Engineering T1 (ENERGY)"
+	GATE = sapient_res_engineering_energy_t1
+	OUTPUT = engineering_research
+	INPUT = energy
+	SR = exotic_gases
+	SR_STEP = 1
+	OUT_STEP = 10
+	IN_STEP = 13
+	OUT_LIMIT = @sapient_research_ceiling
+}
+
+inline_script = {
+	script = sapient/production_chain_sr
+	NAME = "Sapient Engineering T2 (ENERGY)"
+	GATE = sapient_res_engineering_energy_t2
+	OUTPUT = engineering_research
+	INPUT = energy
+	SR = exotic_gases
+	SR_STEP = 1
+	OUT_STEP = 10
+	IN_STEP = 13
+	OUT_LIMIT = @sapient_research_ceiling
+}
+
+inline_script = {
+	script = sapient/production_chain
+	NAME = "Sapient Engineering Chain (MINERALS)"
+	GATE = sapient_research_input_is_minerals
+	OUTPUT = engineering_research
+	INPUT = minerals
+	OUT_STEP = 10
+	IN_STEP = 17
+	OUT_LIMIT = @sapient_research_ceiling
+}
+
+inline_script = {
+	script = sapient/production_chain_sr
+	NAME = "Sapient Engineering T1 (MINERALS)"
+	GATE = sapient_res_engineering_minerals_t1
+	OUTPUT = engineering_research
+	INPUT = minerals
+	SR = exotic_gases
+	SR_STEP = 1
+	OUT_STEP = 10
+	IN_STEP = 17
+	OUT_LIMIT = @sapient_research_ceiling
+}
+
+inline_script = {
+	script = sapient/production_chain_sr
+	NAME = "Sapient Engineering T2 (MINERALS)"
+	GATE = sapient_res_engineering_minerals_t2
+	OUTPUT = engineering_research
+	INPUT = minerals
+	SR = exotic_gases
+	SR_STEP = 1
+	OUT_STEP = 10
+	IN_STEP = 17
+	OUT_LIMIT = @sapient_research_ceiling
+}

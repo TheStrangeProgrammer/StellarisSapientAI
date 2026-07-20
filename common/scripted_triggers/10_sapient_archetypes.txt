@@ -23,6 +23,7 @@ sapient_industry_input_is_food = {
 
 sapient_research_input_is_cg = {
 	country_uses_consumer_goods = yes
+	is_gestalt = no
 }
 sapient_research_input_is_energy = {
 	is_machine_empire = yes
@@ -33,6 +34,7 @@ sapient_research_input_is_minerals = {
 
 sapient_unity_input_is_cg = {
 	country_uses_consumer_goods = yes
+	is_gestalt = no
 }
 sapient_unity_input_is_energy = {
 	is_machine_empire = yes
@@ -80,7 +82,7 @@ sapient_alloys_minerals_t2 = {
 }
 
 sapient_cg_minerals_t1 = {
-	sapient_industry_input_is_minerals = yes
+	sapient_cg_chain_minerals = yes
 	has_technology = tech_luxuries_1
 	OR = {
 		has_monthly_income = { resource = rare_crystals value > 0 }
@@ -89,7 +91,7 @@ sapient_cg_minerals_t1 = {
 }
 
 sapient_cg_minerals_t2 = {
-	sapient_industry_input_is_minerals = yes
+	sapient_cg_chain_minerals = yes
 	has_technology = tech_luxuries_2
 	OR = {
 		has_monthly_income = { resource = rare_crystals value > 0 }
@@ -116,7 +118,7 @@ sapient_alloys_food_t2 = {
 }
 
 sapient_cg_food_t1 = {
-	sapient_industry_input_is_food = yes
+	sapient_cg_chain_food = yes
 	has_technology = tech_luxuries_1
 	OR = {
 		has_monthly_income = { resource = rare_crystals value > 0 }
@@ -125,7 +127,7 @@ sapient_cg_food_t1 = {
 }
 
 sapient_cg_food_t2 = {
-	sapient_industry_input_is_food = yes
+	sapient_cg_chain_food = yes
 	has_technology = tech_luxuries_2
 	OR = {
 		has_monthly_income = { resource = rare_crystals value > 0 }
@@ -365,4 +367,21 @@ sapient_unity_minerals_t2 = {
 		has_monthly_income = { resource = exotic_gases value > 0 }
 		resource_stockpile_compare = { resource = exotic_gases value > 200 }
 	}
+}
+
+
+# --- CG chain gates (audit fix) -------------------------------------------
+# Vanilla CG subplans gated country_uses_consumer_goods and excluded the
+# machine-obsessional civic (it has its own dedicated scaling, kept in
+# plan_cg). Our chains initially dropped both conditions — restored here.
+
+sapient_cg_chain_minerals = {
+	sapient_industry_input_is_minerals = yes
+	country_uses_consumer_goods = yes
+	NOT = { has_valid_civic = civic_machine_obsessional_directive }
+}
+sapient_cg_chain_food = {
+	sapient_industry_input_is_food = yes
+	country_uses_consumer_goods = yes
+	NOT = { has_valid_civic = civic_machine_obsessional_directive }
 }

@@ -10,6 +10,7 @@ subplan = {
 	set_name = "Sapient Trade Scaling"
 	potential = {
 		is_megacorp = no
+		is_gestalt = no
 		NOR = {
 			has_monthly_income = { resource = trade value >= @sapient_trade_ceiling }
 			resource_stockpile_compare = { resource = trade value > @economic_plan_stockpile_threshold_very_high }

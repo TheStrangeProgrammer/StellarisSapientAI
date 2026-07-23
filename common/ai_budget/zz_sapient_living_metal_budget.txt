@@ -1,0 +1,21 @@
+# SapientAI — living metal budget overrides (same-name key replace).
+# Single port: threatened-armies activation onto the sapient ladder.
+
+living_metal_expenditure_armies_threatened = {
+	resource = sr_living_metal
+	type = expenditure
+	category = armies
+
+	potential = {
+		is_galvanic_empire = yes
+		# SapientAI: was `highest_threat > 20` — fires only after aggression
+		# already happened. wary = the 20-50 threat rung on our intent+power
+		# ladder (20_sapient_world_triggers.txt), so defense armies fund BEFORE
+		# the war, when a credible equal dislikes or targets us.
+		sapient_threat_wary = yes
+	}
+
+	weight = {
+		weight = 0.1
+	}
+}

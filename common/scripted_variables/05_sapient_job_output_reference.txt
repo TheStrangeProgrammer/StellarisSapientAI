@@ -1,0 +1,61 @@
+# =============================================================================
+# SapientAI — JOB OUTPUT & PER-DISTRICT REFERENCE (raw, per 100 pops, NO modifiers)
+# =============================================================================
+# Subplan ai_weights are inert. Real levers = active subplan `potential`s + the
+# income/naval_cap/pops TARGET amounts. A target is a QUOTA in jobs; size it by
+# thinking in districts. PER-100 RULE: every pop_jobs value is per 100 pops.
+#   per job = value/100 ; N jobs = N*value/100.
+# District job counts: urban = 100, rural = 200 (@base_(rural_)district_jobs).
+# =============================================================================
+
+# ---- BASE OUTPUT PER 100 POPS ----
+@jobout_energy          = 6     # [S] technician (worker, rural)
+@jobout_minerals        = 4     # [S] miner      (worker, rural)
+@jobout_food            = 6     # [S] farmer     (worker, rural)
+@jobout_alloys          = 3     # [S] metallurgist (specialist, industrial zone)
+@jobout_consumer_goods  = 6     # [G] artisan (industrial zone) -- higher than alloys
+@jobout_physics         = 3     # [S] physicist  (specialist, research zone)
+@jobout_society         = 3     # [S] biologist  (specialist, research zone)
+@jobout_engineering     = 3     # [S] engineer   (specialist, research zone)
+@jobout_unity           = 3     # [S] bureaucrat (specialist, unity zone)
+@jobout_trade           = 3     # [S] clerk      (worker)
+@jobout_naval_cap_soldier = 4   # [G] soldier country_naval_cap_add, per-100 confirmed
+
+# ---- STRATEGIC RESOURCES (4.x: no refinery jobs; three separate sources) ----
+# 1) STANDARD = rural SR zone re-tasks a base worker, +0.75 SR per 100, at a cost:
+#      volatile_motes  <- technicians (-3 energy/100)
+#      exotic_gases    <- farmers     (-3 food/100)
+#      rare_crystals   <- miners      (-2 minerals/100)
+@jobout_sr_zone_worker  = 0.75  # [S] per 100 re-tasked workers in an SR zone
+# 2) REFINERY PASSIVE (refinery building, no job): +0.10 SR per 100 metallurgists/artisans
+#    -- fallback for empires lacking SR deposits on habitable planets.
+@jobout_sr_refinery_passive = 0.10 # [G] per 100 industrial pops (in-game)
+# 3) WILDERNESS (specialist jobs, only added by wilderness): chemist / gas_refiner /
+#    translucer = 2 (2.5 upgraded) per 100. Kept for completeness, NOT standard.
+@jobout_sr_wilderness   = 2     # [S] chemist/gas_refiner/translucer, wilderness only
+
+# =============================================================================
+# OUTPUT PER DISTRICT / ZONE  (the stabilization table -- build-increment sizes)
+# =============================================================================
+# RULE [G]: every urban zone = 100 job slots of ONE type; rural district = 200.
+#           "Unified" custom zones split those 100 slots across job types.
+#
+# RURAL RESOURCE DISTRICT (200 jobs, one type):
+#   minerals  200*4/100  =  8        food     200*6/100 = 12
+#   energy    200*6/100  = 12        SR zone  200*0.75/100 = 1.5 (minus base cost)
+#
+# URBAN ZONE, STANDARD (100 jobs, one type):
+#   alloys    (100 metallurgist)      100*3/100 = 3.0
+#   cons_gds  (100 artisan)           100*6/100 = 6.0
+#   research  (100 one discipline)    100*3/100 = 3.0 of that discipline
+#   unity     (100 bureaucrat)        100*3/100 = 3.0        [G]
+#   naval_cap (100 soldier = fortress)100*4/100 = 4.0        [G]
+#
+# URBAN ZONE, UNIFIED/CUSTOM (100 slots split across types):
+#   unified research (30 phys + 30 soc + 30 eng): 0.9 each  (2.7 total)
+#   unified industry (50 metallurgist + 50 artisan): 1.5 alloys + 3.0 CG
+# =============================================================================
+# STEP-SIZING GOAL: pick each scaling step = ~one whole district/zone above, so
+# "target +1 step" == "AI wants one more buildable district". Current steps
+# (minerals 10, food 25, alloys 10, research 3/disc, unity 10) to be re-derived.
+# =============================================================================

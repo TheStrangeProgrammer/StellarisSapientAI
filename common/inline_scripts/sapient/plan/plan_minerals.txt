@@ -1,40 +1,80 @@
-# SapientAI — mineral demand
-# Industry input minerals live in the alloy/CG chains (plan_alloys/plan_cg);
-# this file owns construction demand (archetype-neutral) and nomad/crisis variants.
-
-inline_script = {
-	script = sapient/industrial_input_scaling
-	NAME = "Sapient Construction Minerals Scaling"
-	GATE = always
-	RESOURCE = minerals
-	STEP = 10
-	LIMIT = @sapient_construction_minerals_limit
+# Minerals — base floor for all; peacetime scaling for MINERAL-FLEET empires:
+# Become-the-Crisis (crisis ships) and fauna-ship empires (fauna hulls cost
+# minerals). For everyone else minerals are consumed by construction, funded by
+# the budget layer's district floors. War tiers add bounded top-up (fleet cost +
+# upkeep). Fauna also need a food lane (voidworms/amoeba/tiyanki) — see plan_food.
+subplan = {
+	set_name = "Base Minerals"
+	# is_nomadic=no matches vanilla ("Base Minerals & Energy" is nomad-gated).
+	# Without it, nomads would get this floor PLUS the nomad minerals subplan in
+	# 01_base.txt on top (double-counted).
+	potential = { is_nomadic = no }
+	income = { minerals = @sapient_minerals_base }
 }
 
+# --- Peacetime treadmill (crisis + fauna) ---------------------------------
 subplan = {
 	scaling = yes
-	set_name = "Base Minerals Scaling Nomads"
+	set_name = "Scaling Minerals (Fleet)"
 	potential = {
-		NOR = {
-			is_nomadic = no
-			has_monthly_income = { resource = minerals value <= @economic_plan_scaling_minerals_limit_nomads }
-		}
+		sapient_scales_minerals_fleet = yes
+		NOT = { sapient_minerals_over_cap = yes }
 	}
-
-	income = {
-		minerals = -10
-	}
+	income = { minerals = @sapient_minerals_step }
 }
 
+# --- War escalation (crisis + fauna fleet cost + upkeep) ------------------
+# Cumulative real subplans, all @...=0 until tuned (see 10_sapient_variables).
+subplan = {
+	set_name = "War Minerals (Wary)"
+	potential = { sapient_scales_minerals_fleet = yes  sapient_threat_wary = yes }
+	income = { minerals = @sapient_minerals_war_wary_crisis }
+}
+subplan = {
+	set_name = "War Minerals (Alarmed)"
+	potential = { sapient_scales_minerals_fleet = yes  sapient_threat_alarmed = yes }
+	income = { minerals = @sapient_minerals_war_alarmed_crisis }
+}
+subplan = {
+	set_name = "War Minerals (Mobilizing)"
+	potential = { sapient_scales_minerals_fleet = yes  sapient_threat_mobilizing = yes }
+	income = { minerals = @sapient_minerals_war_mobilizing_crisis }
+}
+subplan = {
+	set_name = "War Minerals (At War)"
+	potential = { sapient_scales_minerals_fleet = yes  sapient_threat_war = yes }
+	income = { minerals = @sapient_minerals_war_atwar_crisis }
+}
+
+# --- Basic buffer treadmill (capped) --------------------------------------
+# Climbs one district at a time up to the tech-tiered ceiling (sapient_minerals_buffer_over_cap), so the empire
+# carries a real surplus cushion instead of budgeting to a knife's edge. Stops at
+# the cap -- late game the buffer is noise, so it stops costing districts.
 subplan = {
 	scaling = yes
-	set_name = "Galactic Nemesis Minerals Scaling"
+	set_name = "Scaling Minerals (Buffer)"
 	potential = {
-		has_ascension_perk = ap_become_the_crisis
-		has_monthly_income = { resource = minerals value < 1000 }
+		is_nomadic = no
+		# Tech-tiered stop: 100/150/250 income ceiling by mining tech rung
+		# (t2 = the old flat 250, so late-game behaviour is unchanged).
+		NOT = { sapient_minerals_buffer_over_cap = yes }
 	}
+	income = { minerals = @sapient_minerals_step }
+}
 
-	income = {
-		minerals = 50
+# --- Purge windfall guard (minerals-fleet mirror) --------------------------
+# Third leg of the guard family (see plan_energy for the full mechanism):
+# ORGANIC purgers grinding LITHOID prey run purge_processing_lithoid =
+# minerals 6/pop. Only dangerous when minerals pay FLEET upkeep — i.e.
+# Become-the-Crisis and fauna empires (sapient_scales_minerals_fleet), which
+# skew heavily toward purger personalities, so the overlap is real: crisis
+# empire eats a lithoid neighbour, contracts crisis-ship upkeep against the
+# grind, minerals crater when the purge ends. Same variables, same self-cancel.
+subplan = {
+	set_name = "Purge Windfall Guard (Minerals)"
+	potential = {
+		sapient_scales_minerals_fleet = yes
+		sapient_purge_windfall_minerals = yes
 	}
+	income = { minerals = @sapient_purge_windfall_guard }
 }

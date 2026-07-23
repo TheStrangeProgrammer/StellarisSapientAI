@@ -1,0 +1,66 @@
+# SapientAI — consumer goods budget overrides (same-name key replace).
+# Colony-ship entries: activation swapped from raw ai_colonize_plans to
+# sapient_colonization_underway (L0 trigger: plan exists AND reachable
+# in-border target). Vanilla reserved colony funds for targets OUTSIDE
+# borders — starving expansion of exactly the money needed to reach them.
+# Now: unreachable plan reserves nothing -> expansion claims the system ->
+# target enters borders -> trigger flips -> colony reserve activates.
+
+consumer_goods_expenditure_colonies_expand = {
+	resource = consumer_goods
+	type = expenditure
+	category = colonies
+
+	potential = {
+		is_nomadic = no
+		is_gestalt = no
+		sapient_colonization_underway = yes
+		OR = {
+			AND = {
+				is_lithoid_empire = no
+				is_infernal_empire = no
+				has_resource = { type = food amount > 400 }
+			}
+			AND = {
+				is_lithoid_empire = yes
+				has_resource = { type = minerals amount > 400 }
+			}
+			AND = {
+				is_robot_empire = yes
+				has_resource = { type = energy amount > 400 }
+			}
+			AND = {
+				is_infernal_empire = yes
+				has_resource = { type = alloys amount > 400 }
+			}
+		}
+	}
+
+	weight = {
+		weight = 0.5
+	}
+
+	desired_min = {
+		base = 0
+		modifier = {
+			add = @colony_cost_base
+			is_virtual_empire = no
+		}
+		modifier = {
+			add = @colony_cost_low
+			is_virtual_empire = yes
+		}
+	}
+
+	desired_max = {
+		base = 0
+		modifier = {
+			add = @colony_cost_base_max
+			is_virtual_empire = no
+		}
+		modifier = {
+			add = @colony_cost_low_max
+			is_virtual_empire = yes
+		}
+	}
+}

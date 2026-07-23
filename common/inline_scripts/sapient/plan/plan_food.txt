@@ -1,82 +1,128 @@
-# SapientAI — food demand: three distinct consumers, one file
-#   1. eating (vanilla, uses_food)
-#   2. industry input, catalytic archetype: base floor here, scaling inside the
-#      alloy/CG chains (plan_alloys/plan_cg)
-#   3. SHIPBUILDING, bioship empires: food is their alloys. Vanilla caps this at
-#      500 while a normal late empire wants 1000+ alloys — a bioship fleet needs
-#      food income at alloy scale (~4k late-game). Basic tier raises the ceiling
-#      to @sapient_bioship_food_limit; the ladder tiers must continue the climb.
+# Food — base floor for all food consumers; a second bioship base for ship-side
+# food (bioship hull is food, and bioships burn food as fleet fuel); a bioship
+# peacetime treadmill; and bioship war tiers on top. Standard consumers run
+# base-only (pure consumption). Inert deficit/threat weights removed.
 
+# Pop food, for anyone whose pops eat.
 subplan = {
 	set_name = "Base Food"
-	potential = {
-		country_uses_bio_ships = no
-		country_uses_food = yes
-	}
-	
-	income = {
-		food = @economic_plan_food_target
-	}
+	# sapient_uses_food fixes vanilla's expense-based country_uses_food, which
+	# reads true for any machine that transiently holds organic pops (fresh
+	# conquest, mid-purge/displacement) or during the uninitialised-economy window.
+	# Servitors and assimilators (permanent/continuous organic eaters) stay in.
+	potential = { sapient_uses_food = yes }
+	income = { food = @sapient_food_base }
 }
 
-subplan = {
-	scaling = yes
-	set_name = "Base Food Scaling"
-	potential = {
-		country_uses_bio_ships = no
-		country_uses_food = yes
-		OR = {
-			NOR = {
-				has_monthly_income = { resource = food value >= @economic_plan_scaling_food_limit }
-				resource_stockpile_compare = {
-					resource = food
-					value > @economic_plan_stockpile_threshold_high
-				}
-			}
-		}
-	}
-
-	income = {
-		food = 20
-	}
-}
-
+# Bioship ship-side food, additive on top of "Base Food". Vanilla's canonical
+# bioship cost split (@halved_alloy_to_food_cost_ratio 1.75) is 3.5:1 food:alloy,
+# so ship-side food = 10 alloy x 3.5 = 35. Gated on bioship, not country_uses_food:
+# bioships burn food as fuel even when pops don't eat it.
 subplan = {
 	set_name = "Base Food (Bioship)"
-	potential = {
-		country_uses_bio_ships = yes
-	}
-
-	income = {
-		food = @economic_plan_bio_ships_empire_food_target
-	}
+	potential = { sapient_is_bioship_empire = yes }
+	income = { food = @sapient_food_base_bioship }
 }
 
+# --- Peacetime treadmill (bioship) ----------------------------------------
 subplan = {
 	scaling = yes
-	set_name = "Base Food Scaling (Bioship)"
+	set_name = "Scaling Food (Bioship)"
 	potential = {
-		country_uses_bio_ships = yes
-		NOR = {
-			has_monthly_income = { resource = food value >= @sapient_bioship_food_limit }
-			resource_stockpile_compare = {
-				resource = food
-				value > @economic_plan_stockpile_threshold_high
-			}
-		}
+		sapient_is_bioship_empire = yes
+		NOT = { sapient_food_over_cap_bioship = yes }
 	}
-
-	income = {
-		food = 50
-	}
+	income = { food = @sapient_food_step_bioship }
 }
 
+# --- War escalation (bioship hull/fuel + fauna upkeep) --------------------
+# Shared by bioship AND fauna empires (sapient_scales_food_fleet); reuses the
+# @sapient_food_war_*_bio ramp rather than a separate fauna set.
+# Cumulative real subplans, all @...=0 until tuned (see 10_sapient_variables).
 subplan = {
-	set_name = "Sapient Industrial Food Base"
+	set_name = "War Food Bio (Wary)"
+	potential = { sapient_scales_food_fleet = yes  sapient_threat_wary = yes }
+	income = { food = @sapient_food_war_wary_bio }
+}
+subplan = {
+	set_name = "War Food Bio (Alarmed)"
+	potential = { sapient_scales_food_fleet = yes  sapient_threat_alarmed = yes }
+	income = { food = @sapient_food_war_alarmed_bio }
+}
+subplan = {
+	set_name = "War Food Bio (Mobilizing)"
+	potential = { sapient_scales_food_fleet = yes  sapient_threat_mobilizing = yes }
+	income = { food = @sapient_food_war_mobilizing_bio }
+}
+subplan = {
+	set_name = "War Food Bio (At War)"
+	potential = { sapient_scales_food_fleet = yes  sapient_threat_war = yes }
+	income = { food = @sapient_food_war_atwar_bio }
+}
+
+# Fauna fleets cost food alongside minerals: voidworms are ~1:1 food:minerals,
+# amoeba/tiyanki lines are food-heavy, cutholoids are minerals-only. So fauna
+# scale food in parallel with the minerals fleet lane (plan_minerals). Step
+# defaults to 1:1 voidworm parity with the minerals step; tune up for amoeba/
+# tiyanki-heavy rosters, down for cutholoid-heavy ones. Flat food cap for the stop
+# (fauna have their own hull tiers, not the bioship tech line — tech-tier later if
+# needed).
+subplan = {
+	scaling = yes
+	set_name = "Scaling Food (Fauna)"
 	potential = {
-		sapient_industry_input_is_food = yes
+		uses_fauna_ship_sizes = yes
+		NOT = { resource_stockpile_compare = { resource = food value >= @sapient_food_cap_battleship } }
 	}
-	income = {
-		food = @sapient_catalytic_food_base
+	income = { food = @sapient_food_step_fauna }
+}
+
+# --- Basic buffer treadmill (capped) --------------------------------------
+# Climbs one district at a time up to @sapient_food_scaling_cap, so the empire
+# carries a real surplus cushion instead of budgeting to a knife's edge. Stops at
+# the cap -- late game the buffer is noise, so it stops costing districts.
+subplan = {
+	scaling = yes
+	set_name = "Scaling Food (Buffer)"
+	potential = {
+		sapient_uses_food = yes
+		# Normal empires: food is pure pop consumption, so a small cushion is all
+		# that's useful. Food-fleet empires use the bigger lane below instead.
+		sapient_scales_food_fleet = no
+		NOT = { has_monthly_income = { resource = food value >= @sapient_food_scaling_cap } }
 	}
+	income = { food = @sapient_food_step }
+}
+
+# Food-fleet empires (bioship + fauna): food is what pays FLEET upkeep, so it needs
+# the same size shock buffer that energy gets for a normal empire — a 50 cushion is
+# nowhere near enough when a fleet's upkeep rides on it. Same 200 cap as energy,
+# for exactly the same reason. Mutually exclusive with the lane above.
+subplan = {
+	scaling = yes
+	set_name = "Scaling Food (Buffer, Fleet)"
+	potential = {
+		sapient_scales_food_fleet = yes
+		# Tech-tiered stop: 110/160/260 income ceiling by food-processing rung
+		# (was a flat 200; sized off the bioship base 60, see variables file).
+		NOT = { sapient_food_fleet_buffer_over_cap = yes }
+	}
+	income = { food = @sapient_food_step }
+}
+
+# --- Purge windfall guard (food-fleet mirror) ------------------------------
+# Same mechanism as plan_energy's guard, keyed to the food-paying purge job:
+# ORGANIC purgers grinding NON-LITHOID prey (purge_processing = food 6/pop).
+# Only armed for empires whose FLEET runs on food (bioship/fauna) — for a
+# normal empire a food windfall ending just shrinks a surplus, pop
+# consumption is stable. (Known soft case, unguarded: a catalytic devouring
+# swarm's food windfall props up alloy conversion — production sag on purge
+# end, not contracted upkeep, so it fails gently.)
+subplan = {
+	set_name = "Purge Windfall Guard (Food)"
+	potential = {
+		sapient_scales_food_fleet = yes
+		sapient_purge_windfall_food = yes
+	}
+	income = { food = @sapient_purge_windfall_guard }
 }

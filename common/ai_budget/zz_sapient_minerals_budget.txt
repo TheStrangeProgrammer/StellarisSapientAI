@@ -1,0 +1,270 @@
+# SapientAI — minerals budget overrides (same-name key replace, semantics
+# CONFIRMED in test: AI built districts at ~700-800 banked vs never <1000).
+# Planet bands: low <500 / med 500-2000 / high >=2000, desired_min 500/400/300
+# (floors fix fraction-vs-lump: districts cost 300-500 upfront vs ~30/mo
+# income allocation).
+# Station bands mirror the planet bands. Reserve ladder in station units
+# (@civilian_station_cost = 100 minerals): min 1x/2x/4x, max 2x/4x/8x by
+# tier — poor empires hold one station (capped at 2 so buildings win the
+# early bank), rich empires keep a 4-8 station chest to clear survey
+# backlog fast. min ASCENDS with wealth; the old descending floors were
+# backwards. Food twin ladder lives in zz_sapient_food_budget.txt at
+# x1.25 (@mineral_to_food_cost_ratio).
+
+minerals_expenditure_planets_low = {
+	resource = minerals
+	type = expenditure
+	category = planets
+
+	potential = {
+		resource_stockpile_compare = { resource = minerals value < 500 }
+	}
+
+	weight = {
+		weight = 1.0
+	}
+	desired_min = {
+		base = 500
+	}
+}
+
+minerals_expenditure_planets_med = {
+	resource = minerals
+	type = expenditure
+	category = planets
+
+	potential = {
+		resource_stockpile_compare = { resource = minerals value >= 500 }
+		resource_stockpile_compare = { resource = minerals value < 2000	}
+	}
+
+	weight = {
+		weight = 0.8
+	}
+	desired_min = {
+		base = 400
+	}
+}
+
+minerals_expenditure_planets_high = {
+	resource = minerals
+	type = expenditure
+	category = planets
+
+	potential = {
+		resource_stockpile_compare = { resource = minerals value >= 2000 }
+	}
+
+	weight = {
+		weight = 0.6
+	}
+	desired_min = {
+		base = 300
+	}
+}
+
+minerals_expenditure_stations_low = {
+	resource = minerals
+	type = expenditure
+	category = stations
+
+	potential = {
+		is_nomadic = no
+		country_uses_bio_ships = no
+		resource_stockpile_compare = { resource = minerals value < 500 }
+	}
+
+	weight = {
+		weight = 0.2
+	}
+	desired_min = {
+		base = 100
+	}
+	desired_max = {
+		base = 200
+	}
+}
+
+minerals_expenditure_stations_med = {
+	resource = minerals
+	type = expenditure
+	category = stations
+
+	potential = {
+		is_nomadic = no
+		country_uses_bio_ships = no
+		resource_stockpile_compare = { resource = minerals value >= 500 }
+		resource_stockpile_compare = { resource = minerals value < 2000 }
+	}
+
+	weight = {
+		weight = 0.1
+	}
+	desired_min = {
+		base = 200
+	}
+	desired_max = {
+		base = 400
+	}
+}
+
+minerals_expenditure_stations_high = {
+	resource = minerals
+	type = expenditure
+	category = stations
+
+	potential = {
+		is_nomadic = no
+		country_uses_bio_ships = no
+		resource_stockpile_compare = { resource = minerals value >= 2000 }
+	}
+
+	weight = {
+		weight = 0.05
+	}
+	desired_min = {
+		base = 400
+	}
+	desired_max = {
+		base = 800
+	}
+}
+
+minerals_expenditure_colonies_lithoid_expand = {
+	resource = minerals
+	type = expenditure
+	category = colonies
+
+	potential = {
+		is_nomadic = no
+		is_robot_empire = no
+		is_lithoid_empire = yes
+		# SapientAI: vanilla's ONLY colony entry with no colonization gate at
+		# all — lithoids carried a permanent colony-ship mineral reservation
+		# from 400 banked onward, plans or none, competing with construction.
+		# Same trigger as every sibling entry: reserve only for reachable
+		# targets; expansion->colonization handoff applies.
+		sapient_colonization_underway = yes
+		NOT = {
+			has_origin = origin_synthetic_fertility
+		}
+		has_resource = { type = minerals amount > 400 }
+	}
+
+	weight = {
+		weight = 0.8
+	}
+
+	desired_min = {
+		base = 0
+		modifier = {
+			add = @colony_cost_base
+			is_hive_empire = no
+		}
+		modifier = {
+			add = @colony_cost_high
+			OR = {
+				is_hive_empire = yes
+				has_origin = origin_lithoid
+			}
+		}
+	}
+
+	desired_max = {
+		base = 0
+		modifier = {
+			add = @colony_cost_base_max
+			is_hive_empire = no
+		}
+		modifier = {
+			add = @colony_cost_high_max
+			OR = {
+				is_hive_empire = yes
+				has_origin = origin_lithoid
+			}
+		}
+	}
+}
+
+minerals_expenditure_ships = {
+	resource = minerals
+	type = expenditure
+	category = ships
+
+	potential = {
+		OR = {
+			uses_fauna_ship_sizes = yes
+			AND = {
+				has_ascension_perk = ap_become_the_crisis
+				has_crisis_level = crisis_level_2
+			}
+		}
+	}
+
+	weight = {
+		weight = 0.4
+
+		# SapientAI expansion-phase gate (mirrors alloys ships; see that file
+		# for the tested overflow-redistribution rationale).
+		modifier = {
+			factor = 0
+			sapient_threat_wary = no
+			has_resource = { type = minerals amount < 800 }
+			# frontier scan last: lazy AND means rich empires exit before it
+			sapient_expansion_wanted = yes
+		}
+
+		# Graduated war escalation (replaces the flat is_at_war x2). Crisis/Nemesis
+		# minerals ships run a lower curve than standard ships and keep their own
+		# peak of 2 (no recently_lost_war band — the original had none). Mutually
+		# exclusive bands; see alloys budget for the tier mapping.
+		modifier = {
+			factor = 1.25
+			sapient_threat_wary = yes
+			sapient_threat_alarmed = no
+		}
+		modifier = {
+			factor = 1.5
+			sapient_threat_alarmed = yes
+			sapient_threat_mobilizing = no
+		}
+		modifier = {
+			factor = 1.75
+			sapient_threat_mobilizing = yes
+			sapient_threat_war = no
+		}
+		modifier = {
+			factor = 2
+			sapient_threat_war = yes
+		}
+
+		# spend less minerals on ships if over capacity
+		modifier = {
+			factor = 0.5
+			used_naval_capacity_percent >= 1.0
+		}
+	}
+}
+
+# --- Ported from vanilla: highest_threat / calendar checks replaced with
+# --- the sapient ladder. Otherwise verbatim vanilla.
+
+minerals_expenditure_armies_threatened = {
+	resource = minerals
+	type = expenditure
+	category = armies
+
+	potential = {
+		country_uses_bio_ships = no
+		is_nomadic = no
+		# SapientAI: was `highest_threat > 20` — fires only after aggression
+		# already happened. wary = the 20-50 threat rung on our intent+power
+		# ladder (20_sapient_world_triggers.txt), so defense armies fund BEFORE
+		# the war, when a credible equal dislikes or targets us.
+		sapient_threat_wary = yes
+	}
+
+	weight = {
+		weight = 0.1
+	}
+}

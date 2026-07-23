@@ -1,16 +1,260 @@
-# SapientAI — tuning variables
-# Ceilings are safety rails, not growth schedules: scaling is a treadmill
-# (target = income + step), so pacing comes from coupled input demand and the
-# basic-resource / stockpile brakes, not from staged ceilings.
-@sapient_catalytic_food_base = 30
-@sapient_construction_minerals_limit = 250
-@sapient_alloy_ceiling = 2000
-@sapient_cg_ceiling = 400
-@sapient_bioship_food_limit = 4000
-@sapient_research_ceiling = 5000
-@sapient_unity_ceiling = 1000
-@sapient_trade_ceiling = 300
-@sapient_trade_ceiling_megacorp = 1500
-@sapient_sr_ceiling = 30
-@sapient_exotic_ceiling = 10
-@sapient_energy_ceiling = 600
+# SapientAI v2 — economic plan variables
+# Model: every resource has a flat BASE (deficit-weighted floor); resources an
+# archetype dumps into growth also SCALE, stopping at an income cap OR a
+# stockpile cap (whichever trips first). Cleaned to only what v2 references.
+
+# --- Base targets (flat surplus-after-consumption floors) -----------------
+@sapient_energy_base         = 25
+@sapient_minerals_base       = 50
+@sapient_food_base           = 25
+# Bioship ship-side food (additive on top of the 25 pop-food base). Vanilla's
+# canonical bioship conversion is @halved_alloy_to_food_cost_ratio = 1.75 ->
+# half the alloys + food, i.e. 3.5:1 food:alloy. Kept readable (whole numbers,
+# full 10 alloy not 5) at the cost of ~2x over-provisioning: 35 = 10 x 3.5.
+# Total bioship food solvency = 25 (pop) + 35 (ship) = 60. Storage-safe.
+@sapient_food_base_bioship   = 35
+@sapient_consumer_goods_base = 10
+@sapient_alloys_base         = 15
+@sapient_alloys_base_bioship = 10   # bioship alloy solvency: equipment only (hull
+                                   # is food) -> ~2/3 of normal, matches bio caps.
+@sapient_unity_base          = 10
+# PER DISCIPLINE. income lists physics+society+eng, so the real target is x3.
+# A researcher and a bureaucrat both output 3/pop (gestalt drones too), so this
+# is measured in the same pop-cost as unity: 5 -> 15 total research = 5 pops,
+# vs unity_base 10 = 3.3 pops. Was 15 (=45 total = 15 pops, a 4.5x over-target).
+@sapient_research_base       = 5
+@sapient_trade_base          = 15
+@sapient_naval_base          = 50    # = NAVAL_CAPACITY_BASE define. Matching the
+                                     # empire's natural starting cap means the AI
+                                     # isn't forced to build fortresses/soldier
+                                     # jobs just to reach the floor; scaling + war
+                                     # tiers push it up when there's a reason.
+@sapient_naval_base_homicidal = 50   # ADDITIVE on top of @sapient_naval_base for
+                                     # is_homicidal: their civics' naval_cap_mult
+                                     # (+33-50%) puts their day-one cap at ~65-100,
+                                     # above the universal 50 floor. This lifts
+                                     # their floor to 100 so it reflects the
+                                     # standing forces they actually start with.
+# Strategic resources are base-only (no scaling lane), so this is a solvency
+# FLOOR, not a 1.25-district step. Standard SR zone (rural, 200 jobs) = 1.5 SR
+# (200*0.75/100), minus the re-tasked worker's base output (energy/food/minerals).
+# 3 = ~2 SR zones' worth: a modest real supply for buildings/components/upkeep.
+# Kept low on purpose — each zone costs base output, so you don't want many.
+@sapient_sr_base             = 3     # harvesting floor: ~2 SR zones (1.5 x 2)
+@sapient_sr_refinery_base    = 0.3     # refinery-only: just cover critical upkeep
+
+# --- Scaling steps (added per iteration until a stop gate trips) -----------
+# --- Basic-resource SHOCK BUFFER ------------------------------------------
+# Flat floors give the AI zero shock absorption: it budgets to current income,
+# so a temporary windfall (e.g. the +200 energy a purge produces while grinding
+# down a captured planet's pops) gets spent on RECURRING costs like fleet upkeep,
+# and the economy craters the moment the windfall ends. Vanilla guards this with
+# CAPPED basic-resource scaling lanes; we dropped those when the ladder was
+# replaced, leaving bare floors. These restore them.
+# Self-paced: the treadmill climbs ONE district at a time as each step is
+# fulfilled, it does not jump to the cap. The cap then makes the buffer fade out
+# on its own -- +200 is decisive early game, ~5-10% noise once income is in the
+# thousands, which is exactly when the protection stops being needed.
+# PER-RESOURCE caps: a resource is only worth buffering to the extent it's
+# actually consumed. TESTED FINDING: a flat cap is implicitly sized for a
+# MID-GAME economy — +200 energy is ~a whole second economy at 2205, so the
+# treadmill ate the early build order filling a cushion the empire couldn't
+# use. Energy / minerals / fleet-food caps are therefore TECH-TIERED (the same
+# ladder idiom as the alloy stockpile stops): buffer +50 base, +100 at the
+# zone-specialization tech, +200 one tier above. Ceilings are INCOME totals =
+# base floor + buffer. Rungs live in 10_sapient_plan_triggers
+# (sapient_*_buffer_over_cap).
+#   energy   tiers: tech_power_hub_1 / tech_power_hub_2 (energy grid / nexus)
+#   minerals tiers: tech_mineral_purification_1 / _2 (t2 = 250 = old flat cap)
+#   fleet food tiers: tech_food_processing_1 / _2   (bioship base 60 = 25+35)
+#   food(normal) 50 flat, UNTIERED: pure pop consumption, cushion already tiny
+#   cons_gds 100 flat, UNTIERED for now (tier with
+#     tech_consumer_good_refinement_1/2 if CG overbuild shows up early)
+@sapient_energy_buffer_cap_t0 = 75    # 25 base + 50
+@sapient_energy_buffer_cap_t1 = 125   # 25 base + 100
+@sapient_energy_buffer_cap_t2 = 225   # 25 base + 200
+@sapient_minerals_buffer_cap_t0 = 100 # 50 base + 50
+@sapient_minerals_buffer_cap_t1 = 150 # 50 base + 100
+@sapient_minerals_buffer_cap_t2 = 250 # 50 base + 200
+@sapient_food_fleet_buffer_cap_t0 = 110 # 60 bioship base + 50
+@sapient_food_fleet_buffer_cap_t1 = 160 # 60 bioship base + 100
+@sapient_food_fleet_buffer_cap_t2 = 260 # 60 bioship base + 200
+@sapient_food_scaling_cap           = 50
+@sapient_consumer_goods_scaling_cap = 100
+
+# --- Purge windfall guard --------------------------------------------------
+# The buffer treadmill measures NET income, windfall included — so a purge
+# windfall (+~200 energy while grinding down captured pops) SATISFIES the
+# buffer for free and the treadmill idles exactly while the ghost income
+# lasts; when the purge ends, recurring costs (fleet upkeep) contracted
+# against it crater the economy. The guard is a separate FLAT lane (not a cap
+# bypass — the treadmill stays tech-capped): while a purge is running AND
+# income is visibly windfall-inflated (>= floor), it adds a demand big enough
+# to push the target ABOVE what the windfall satisfies. Deliberately
+# unreachable while purging: it is pure build pressure that converts ghost
+# income into real districts, and it self-cancels the moment the purge ends.
+# THREE guards, keyed to the purge job that decides the windfall resource
+# (see sapient_purge_windfall_* in 10_sapient_plan_triggers): machine purgers
+# -> energy; organic purgers, non-lithoid prey -> food (food-fleet empires
+# only); organic purgers, LITHOID prey -> minerals (minerals-fleet empires
+# only). Shared floor + magnitude below; split per-resource if tuning
+# demands it. Size guard >= typical windfall minus buffer, or it never bites.
+@sapient_purge_windfall_floor = 100   # arm only when income >= base + ~75
+@sapient_purge_windfall_guard = 150   # flat extra demand while armed
+@sapient_energy_step = 15         # 1 rural district (12) x1.25
+@sapient_food_step   = 15         # 1 rural district (12) x1.25
+@sapient_minerals_step = 10       # 1 rural district (8) x1.25 -- already correct
+@sapient_food_step_bioship = 13.125 # ship-side food = alloy step 3.75 x 3.5 (canonical ratio)
+@sapient_food_step_fauna   = 10      # fauna food, 1:1 voidworm parity with @sapient_minerals_step
+@sapient_alloys_step   = 3.75     # 1 foundry zone (100 metallurgists = 3) x1.25
+# NOTE — alloy income is deliberately UNCAPPED. The scaling stop is the
+# tech-tiered STOCKPILE cap (sapient_alloys_over_cap), which makes income
+# self-tuning: the bank only stays below cap while alloys are being SPENT, so
+# income equilibrates to expenditure and the real ceiling on late-game alloy
+# ambition lives where README §2 puts it — naval cap + budget shares. Known
+# cost: foundries overshoot into overflow while the bank sits full. War lanes
+# are not gated on the stockpile stop, so threat still pulls demand at a full
+# bank. (An income-cap variable that claimed to be "THE key dial" used to sit
+# here — it was never referenced anywhere and was removed as a booby trap.)
+@sapient_alloys_step_bioship = 2.5 # equipment-only scaling at the SAME 2/3
+                                   # ratio as the bioship base (10/15) and caps.
+                                   # WAS 3.75 (1/1 with normal) on the argument
+                                   # "equipment is full-price alloy" — but that
+                                   # made bioship alloy demand GROW at a full
+                                   # normal empire's rate with the food-hull
+                                   # economy stacked on top (observed: alloy-
+                                   # fat bioships). Vanilla sizes bioship alloy
+                                   # ambition at 0.4x normal (scaling limit
+                                   # 100 vs 250), so if still fat: 1.5 next.
+# Unity scales only during the UNITY ARC (pre-4th-perk); after it, unity scaling
+# stops entirely (the top-level income floor covers edict/tradition upkeep).
+# 1 unity zone = 100 bureaucrats = 3.
+@sapient_unity_step_unity_arc    = 6.75  # unity arc: 2.25 zones x3.0
+@sapient_research_step         = 3.75  # SPLIT (>=10 planets): 1 specialised research
+                                       # zone (100 of one disc = 3) x1.25, PER DISCIPLINE.
+                                       # Not arc-tuned: three lanes already triple demand.
+# UNIFIED (<10 planets) research scales at two rates by arc, mirroring unity
+# (1 unified zone = 30 each = 0.9/disc). RESEARCH ARC is the priority; UNITY ARC
+# is downgraded. Only the unified lane is arc-tuned (see @sapient_research_step).
+@sapient_research_step_unified_research_arc = 2.025 # research arc: 2.25 zones x0.9/disc
+@sapient_research_step_unified_unity_arc    = 1.125 # unity arc (downgraded): 1.25 zones x0.9/disc
+@sapient_trade_step    = 3.75     # 1 clerk zone (3) x1.25  [trade sizing fuzzy]
+@sapient_consumer_goods_step = 7.5 # 1 artisan zone (100 = 6) x1.25. Obsessional
+                                   # Directive scales CG like megacorps scale trade.
+@sapient_naval_step    = 5        # soldiers = naval cap. 1 military zone (100
+                                  # soldiers = 4 cap) x1.25. (fortress=200 soldiers=8
+                                  # -> 10 if you prefer the building as the unit.)
+                                  # WAS 100 = +25 military zones/iter = the overbuild.
+
+# --- Stockpile caps (tech-tiered: bigger ships need bigger reserves) -------
+# Ship-size tech gates the cap. Corvette/destroyer era: 3750. Battleship era:
+# 7500. Titan era: 15000. Bioships use HALF of the CURRENT normal values —
+# the old bio caps (2500/5000/10000) were halves of a stale normal ladder and
+# had drifted to ~2/3, compounding the alloy-fat bioship problem.
+@sapient_alloy_cap_base      = 3750
+@sapient_alloy_cap_battleship = 7500
+@sapient_alloy_cap_titan     = 15000
+@sapient_alloy_cap_base_bio       = 1875
+@sapient_alloy_cap_battleship_bio = 3750
+@sapient_alloy_cap_titan_bio      = 7500
+
+# Minerals (Nemesis) and bioship food track the same tiers.
+@sapient_minerals_cap_base       = 6250
+@sapient_minerals_cap_battleship = 12500
+@sapient_minerals_cap_titan      = 25000
+@sapient_food_cap_base       = 8750
+@sapient_food_cap_battleship = 17500
+@sapient_food_cap_titan      = 35000
+@sapient_trade_stock_cap    = 30000
+
+# --- Structural ------------------------------------------------------------
+@sapient_research_split_colonies = 10
+@sapient_unity_perk_cap          = 4
+# =============================================================================
+# WAR ESCALATION  (LIVE — one buildable unit per rung; see TUNING UNIT below)
+# =============================================================================
+# HISTORY: this began as inert scaffolding at 0; the rungs are now dialed to
+# one increment each, so the "at 0 they're always fulfilled / inert and safe"
+# analysis below NO LONGER APPLIES — these are real targets. They are small
+# enough to stay reachable in practice (tested), and the fulfillment-gate
+# coupling warning below turned out to be dead documentation anyway (observer-
+# confirmed: treadmills stack fine with Base Pops unfulfilled).
+# Subplan ai_weights are inert (vanilla 00_example.txt: "ai_weights are NOT added
+# from subplans"). So the old `modifier = { add = 50  sapient_threat_* }` blocks
+# did nothing. War escalation is re-expressed as REAL (non-scaling) subplans that
+# add a BOUNDED amount on top of the peacetime target while a threat rung holds,
+# then drop off when it clears. Not `scaling = yes`: a scaling war lane would
+# re-add until its potential failed and could run away over a long war.
+#
+# GRADUATED + CUMULATIVE: the rungs nest (mobilizing -> alarmed -> wary), so at
+# war all firing tiers sum. Reproduces the old +50/rung stacking intent.
+#   peacetime target + wary + alarmed + mobilizing + atwar
+#
+# TUNING UNIT: one buildable increment from 05_sapient_job_output_reference —
+#   alloys 3.75 (1 foundry zone)   energy 12 (1 rural district)
+#   minerals 8 (1 rural district)  food 12 (1 rural district)
+#   naval 5 (1 military zone)
+# e.g. set _wary = one unit, _alarmed = two, etc., for a rising staircase.
+#
+# ⚠ COUPLING (verify in observer play): a non-optional subplan that is UNFULFILLED
+#   appears to gate ALL scaling globally — vanilla marks its pops goal
+#   `optional = yes` for exactly this reason. So keep war targets REACHABLE, or
+#   add `optional = yes` to a war subplan to let it add demand without ever
+#   freezing peacetime growth. At 0 they're always fulfilled (unless in deficit),
+#   so the scaffolding is inert and safe until you dial a number up.
+#
+# ⚠ TIER COLLAPSE: sapient_threat_mobilizing currently == is_at_war (see
+#   20_sapient_world_triggers.txt), so the mobilizing and atwar tiers fire
+#   together until you split that trigger. The 4th tier is wired but redundant
+#   with the 3rd for now — split mobilizing (imminent, pre-shooting) from
+#   is_at_war (shooting) to make all four distinct.
+
+# Alloys — normal shipbuilders (equipment + hull both alloy)
+@sapient_alloys_war_wary       = 3.75
+@sapient_alloys_war_alarmed    = 3.75
+@sapient_alloys_war_mobilizing = 3.75
+@sapient_alloys_war_atwar      = 3.75
+# Alloys — bioship equipment (weapons/armor/shields; hull is food, see below)
+# One bio equipment unit = 2.5 (matches @sapient_alloys_step_bioship).
+@sapient_alloys_war_wary_bio       = 2.5
+@sapient_alloys_war_alarmed_bio    = 2.5
+@sapient_alloys_war_mobilizing_bio = 2.5
+@sapient_alloys_war_atwar_bio      = 2.5
+# Energy — standard/machine fleet upkeep (bioships burn food instead)
+@sapient_energy_war_wary       = 15
+@sapient_energy_war_alarmed    = 15
+@sapient_energy_war_mobilizing = 15
+@sapient_energy_war_atwar      = 15
+# Food — bioship hull material + bioship fleet upkeep
+@sapient_food_war_wary_bio       = 15
+@sapient_food_war_alarmed_bio    = 15
+@sapient_food_war_mobilizing_bio = 15
+@sapient_food_war_atwar_bio      = 15
+# Minerals — crisis/Nemesis fleet cost + upkeep
+@sapient_minerals_war_wary_crisis       = 10
+@sapient_minerals_war_alarmed_crisis    = 10
+@sapient_minerals_war_mobilizing_crisis = 10
+@sapient_minerals_war_atwar_crisis      = 10
+# Naval cap — pull the ceiling up so wartime alloys become fleet, not starbases.
+# These are now SCALING steps (plan_naval war lanes, re-added each cycle while
+# the rung + its used% gate hold), not one-shot bumps. Rungs nest, so effective
+# per-cycle climb near cap: wary 5 / alarmed 10 / mobilizing 15 / at war 25.
+@sapient_naval_war_wary       = 5
+@sapient_naval_war_alarmed    = 5
+@sapient_naval_war_mobilizing = 5
+@sapient_naval_war_atwar      = 10
+
+# =============================================================================
+# SHIP-BUDGET WAR RAMP  (graduated replacement for the flat is_at_war boost)
+# =============================================================================
+# The ship expenditure categories (alloys/food/minerals) used to multiply their
+# weight by a single flat factor on is_at_war. These replace that with a
+# mutually-exclusive threat-band ladder (exactly one fires) that ramps ship
+# spending up through the rungs to the at-war peak. Bands map to the same tiers
+# the plan uses (20/50/80/war). "peak" preserves the old at-war factor, so at-war
+# behaviour is unchanged; the wary/alarmed/mobilizing rungs are the new pre-war
+# escalation. Standard ships (alloys + food) share this curve.
+@sapient_ship_war_wary       = 1.5   # threat 20-50
+@sapient_ship_war_alarmed    = 2     # threat 50-80
+@sapient_ship_war_mobilizing = 2.5   # threat >80, pre-war
+@sapient_ship_war_peak       = 3     # at war / recently lost a war (was the flat factor)

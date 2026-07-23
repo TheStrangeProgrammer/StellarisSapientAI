@@ -1,113 +1,40 @@
-# SapientAI — consumer goods chains
-# Vanilla CG scaling was optional at +1/step to a 100 ceiling — the most anemic
-# demand in the plan system, upstream of research. Replaced with coupled chains
-# (artisan ratios: minerals 6->6 = 1.0, catalytic food 9->7.5 = 1.2; x1.25 buffer).
-# Non-optional: CG starvation stalls researchers and unity jobs.
-
+# Consumer goods — base floor only. sapient_uses_consumer_goods fixes vanilla's
+# expense-based country_uses_consumer_goods (same leaks: machines during the
+# uninitialised window, transient conquered organics). Obsessional-directive
+# machines — the one gestalt CG user — stay in.
 subplan = {
 	set_name = "Base Consumer Goods"
-	potential = {
-		country_uses_consumer_goods = yes
-	}
-	income = {
-		consumer_goods = @economic_plan_consumer_goods_target
-	}
+	potential = { sapient_uses_consumer_goods = yes }
+	income = { consumer_goods = @sapient_consumer_goods_base }
 }
 
-inline_script = {
-	script = sapient/production_chain
-	NAME = "Sapient CG Chain (Minerals)"
-	GATE = sapient_cg_chain_minerals
-	OUTPUT = consumer_goods
-	INPUT = minerals
-	OUT_STEP = 5
-	IN_STEP = 7
-	OUT_LIMIT = @sapient_cg_ceiling
-}
-
-inline_script = {
-	script = sapient/production_chain
-	NAME = "Sapient CG Chain (Food)"
-	GATE = sapient_cg_chain_food
-	OUTPUT = consumer_goods
-	INPUT = food
-	OUT_STEP = 5
-	IN_STEP = 8
-	OUT_LIMIT = @sapient_cg_ceiling
-}
-
+# Obsessional Directive ("paperclip AI"): it MUST produce consumer goods, and
+# every 15k CG converts into a large lump of unity/research and drains 15k from the
+# stockpile. CG is therefore its CORE OUTPUT — more is always better, 1:1 into
+# unity/research with no diminishing return, exactly like research is for a tech
+# empire. So scale it UNBOUNDED (no stockpile cap): the stockpile never rests full
+# (it's dumped every 15k, so a cap would rarely trip), and a cap would kneecap the
+# empire's whole economy in the endgame. Bounded only by the treadmill's own
+# "fulfilled" self-limit — i.e. by what the empire can actually produce each pass.
 subplan = {
 	scaling = yes
-	set_name = "Base Obsessional CG Scaling"
+	set_name = "Scaling Consumer Goods (Obsessional)"
 	potential = {
 		has_valid_civic = civic_machine_obsessional_directive
-		has_monthly_income = { resource = consumer_goods value < @economic_plan_scaling_obsessional_consumer_goods_limit_base }
 	}
-	income = {
-		consumer_goods = 20
-	}
+	income = { consumer_goods = @sapient_consumer_goods_step }
 }
 
-# Tech stages: tech_luxuries_1/2 AND crystal solvency; crystals coupled.
-
+# --- Basic buffer treadmill (capped) --------------------------------------
+# Climbs one district at a time up to @sapient_consumer_goods_scaling_cap, so the empire
+# carries a real surplus cushion instead of budgeting to a knife's edge. Stops at
+# the cap -- late game the buffer is noise, so it stops costing districts.
 subplan = {
-	set_name = "Sapient CG SR Bootstrap"
+	scaling = yes
+	set_name = "Scaling Consumer Goods (Buffer)"
 	potential = {
-		has_technology = tech_luxuries_1
+		sapient_uses_consumer_goods = yes
+		NOT = { has_monthly_income = { resource = consumer_goods value >= @sapient_consumer_goods_scaling_cap } }
 	}
-	income = {
-		rare_crystals = 3
-	}
-}
-
-inline_script = {
-	script = sapient/production_chain_sr
-	NAME = "Sapient CG Chain T1 (Minerals)"
-	GATE = sapient_cg_minerals_t1
-	OUTPUT = consumer_goods
-	INPUT = minerals
-	SR = rare_crystals
-	OUT_STEP = 5
-	IN_STEP = 7
-	SR_STEP = 1
-	OUT_LIMIT = @sapient_cg_ceiling
-}
-
-inline_script = {
-	script = sapient/production_chain_sr
-	NAME = "Sapient CG Chain T2 (Minerals)"
-	GATE = sapient_cg_minerals_t2
-	OUTPUT = consumer_goods
-	INPUT = minerals
-	SR = rare_crystals
-	OUT_STEP = 5
-	IN_STEP = 7
-	SR_STEP = 1
-	OUT_LIMIT = @sapient_cg_ceiling
-}
-
-inline_script = {
-	script = sapient/production_chain_sr
-	NAME = "Sapient CG Chain T1 (Food)"
-	GATE = sapient_cg_food_t1
-	OUTPUT = consumer_goods
-	INPUT = food
-	SR = rare_crystals
-	OUT_STEP = 5
-	IN_STEP = 8
-	SR_STEP = 1
-	OUT_LIMIT = @sapient_cg_ceiling
-}
-
-inline_script = {
-	script = sapient/production_chain_sr
-	NAME = "Sapient CG Chain T2 (Food)"
-	GATE = sapient_cg_food_t2
-	OUTPUT = consumer_goods
-	INPUT = food
-	SR = rare_crystals
-	OUT_STEP = 5
-	IN_STEP = 8
-	SR_STEP = 1
-	OUT_LIMIT = @sapient_cg_ceiling
+	income = { consumer_goods = @sapient_consumer_goods_step }
 }

@@ -1,0 +1,209 @@
+# SapientAI — unity budget. Min/max topology: everything flows into
+# traditions until exhausted, then edicts as the terminal sink.
+# Logic is test-proven; prose docs were removed deliberately after
+# repeated comment drift. The code is the documentation.
+
+unity_expenditure_traditions = {
+	resource = unity
+	type = expenditure
+	category = traditions
+
+	potential = {
+		has_unlocked_all_traditions = no
+	}
+
+	weight = {
+		weight = 0.8
+	}
+
+}
+
+unity_expenditure_megastructures = {
+	resource = unity
+	type = expenditure
+	category = megastructures
+
+	potential = {
+		is_at_war = no
+		can_build_unity_megastructures = yes
+
+		has_resource = {
+			type = unity
+			amount > 500
+		}
+	}
+
+	weight = {
+		weight = 0.1
+	}
+
+	desired_min = {
+		base = 500
+		modifier = {
+			add = 1500
+			has_technology = tech_orbital_arc_furnace
+			has_technology = tech_dyson_swarm
+		}
+	}
+
+	desired_max = {
+		base = 10000
+	}
+}
+
+unity_expenditure_leaders = {
+	resource = unity
+	type = expenditure
+	category = leaders
+
+	potential = {
+		always = yes
+	}
+
+	weight = {
+		weight = 0.5
+	}
+
+	desired_min = {
+		base = 200
+	}
+
+	desired_max = {
+	base = 350
+	modifier = { add = 275  check_modifier_value = { modifier = leader_initial_skill value >= 1 } }
+	modifier = { add = 375  check_modifier_value = { modifier = leader_initial_skill value >= 2 } }
+	modifier = { add = 475  check_modifier_value = { modifier = leader_initial_skill value >= 3 } }
+	modifier = { add = 575  check_modifier_value = { modifier = leader_initial_skill value >= 4 } }
+	modifier = { add = 675  check_modifier_value = { modifier = leader_initial_skill value >= 5 } }
+	modifier = { add = 775  check_modifier_value = { modifier = leader_initial_skill value >= 6 } }
+	modifier = { add = 1000 check_modifier_value = { modifier = leader_initial_skill value >= 7 } }
+	modifier = { add = 1500 check_modifier_value = { modifier = leader_initial_skill value >= 8 } }
+	modifier = { add = 2000 check_modifier_value = { modifier = leader_initial_skill value >= 9 } }
+	modifier = {
+		mult = 2
+		has_policy_flag = leader_enhancement_capacity_boosters
+	}
+}
+}
+
+unity_expenditure_deposit_blockers = {
+	resource = unity
+	type = expenditure
+	category = deposit_blockers
+
+	potential = {
+		any_owned_planet = {
+			has_unity_blocker = yes
+		}
+	}
+
+	weight = {
+		weight = 0.5
+
+		modifier = {
+			add = 1
+			any_owned_planet = {
+				num_uncleared_blockers > 0
+				num_free_districts = { type = any value < 1 }
+				has_unity_blocker = yes
+			}
+		}
+	}
+
+	desired_min = {
+		base = 500
+	}
+	
+	desired_max = {
+		base = 1500
+	}
+}
+
+unity_expenditure_decisions = {
+	resource = unity
+	type = expenditure
+	category = decisions
+
+	potential = {
+		always = yes
+	}
+
+	weight = {
+		weight = 0.20
+	}
+	desired_min = {
+		base = 100
+	}
+	desired_max = {
+		base = 500
+		modifier = {
+			add = 2000
+			OR = {
+				has_technology = tech_penal_colonies
+				has_technology = tech_resort_colonies
+				has_technology = tech_slave_colonies
+			}
+		}
+		modifier = {
+			add = value:paragon_origin_count_egalitarians
+			has_modifier = paragon_origin_reformists
+			any_situation = { is_situation_type = paragon_origin_reformists_struggle }
+		}
+	}
+}
+unity_expenditure_edicts = {
+	resource = unity
+	type = expenditure
+	category = edicts
+
+	potential = {
+		has_resource = {
+			type = unity
+			amount > 300
+		}
+	}
+
+	weight = {
+		weight = 0.2
+	}
+	desired_max = {
+	base = 50
+	modifier = { add = 50  num_ascension_perks > 0 }
+	modifier = { add = 50  num_ascension_perks > 1 }
+	modifier = { add = 50  num_ascension_perks > 2 }
+	modifier = { add = 50  num_ascension_perks > 3 }
+	modifier = { add = 50  num_ascension_perks > 4 }
+	modifier = { add = 50  num_ascension_perks > 5 }
+	modifier = { add = 50  num_ascension_perks > 6 }
+	modifier = { add = 50  num_ascension_perks > 7 }
+	modifier = {
+		add = 1000000
+		OR = {
+			sapientai_has_finished_ascension = yes
+			has_unlocked_all_traditions = yes
+		}
+	}
+}
+}
+unity_expenditure_starbases = {
+	resource = unity
+	type = expenditure
+	category = starbases
+
+	potential = {
+		is_nomadic = yes
+		has_technology = tech_arkship_tier_3
+	}
+
+	weight = {
+		weight = 0.2
+	}
+
+	desired_min = {
+		base = @arkship_cost_unity_500
+	}
+
+	desired_max = {
+		base = 1000
+	}
+}

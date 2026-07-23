@@ -2,6 +2,6 @@ name="StellarisSapientAI"
 tags={
 	"AI"
 }
-picture="thumbnail.png"
+picture="thumb.jpg"
 version="0.1"
 supported_version="v4.4.*"

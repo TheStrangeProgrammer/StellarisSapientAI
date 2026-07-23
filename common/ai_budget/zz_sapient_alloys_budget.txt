@@ -1,0 +1,579 @@
+# SapientAI — alloys budget overrides (same-name key replace).
+# Starbase entry gains a desired_min (300): vanilla carries only the
+# desired_max Starhold-savings modifier, so starbase upgrades accrued at an
+# income fraction against lumpy 100-1000 alloy costs, same trap as districts.
+# NEXT TARGETS in this file once observer-gated: ships share (vanilla 0.6 =
+# ~12% of peacetime alloys, behind colonies 26% and starbases 16%) and the
+# catalytic spend routing.
+
+alloys_expenditure_starbases = {
+	resource = alloys
+	type = expenditure
+	category = starbases
+
+	potential = {
+		NOT = {
+			is_country_type = fallen_empire
+		}
+	}
+
+	weight = {
+		weight = 0.4
+
+		# spend more on starbase upgrades if at fleet cap
+		modifier = {
+			factor = 2
+			used_naval_capacity_percent >= 1.0
+		}
+
+		# Reduce spending on claiming new systems if we have unclaimed planets
+		modifier = {
+			is_machine_empire = yes
+			has_country_resource = { type = alloys amount < 450 }
+			factor = 0.25 # more aggresive saving for robots since their colony ships cost more
+			sapient_colonization_underway = yes
+		}
+		# Reduce spending on claiming new systems if we have unclaimed planets
+		modifier = {
+			is_machine_empire = no
+			has_country_resource = { type = alloys amount < 250 }
+			factor = 0.50
+			sapient_colonization_underway = yes
+		}
+
+		modifier = {
+			factor = 1.5
+			used_starbase_capacity_percent < 1
+			any_owned_starbase = {
+				can_be_upgraded = yes
+			}
+		}
+		modifier = {
+			factor = 1.5
+			OR = {
+				any_owned_starbase = {
+					NOT = { has_starbase_size = starbase_outpost }
+					can_be_upgraded = yes
+				}
+				any_owned_nonprimary_starbase = {
+					can_be_upgraded = yes
+				}
+			}
+		}
+
+		# Biological Starbases use less alloys
+		modifier = {
+			factor = 0.5
+			country_uses_bio_ships = yes
+		}
+
+		# Nomads rely on Waystations. Prioritize starbase spending.
+		modifier = {
+			factor = 2
+			is_nomadic = yes
+		}
+	}
+	desired_max = {
+		base = 500
+		modifier = {
+			# Allow saving enough for a Starhold (1000 alloys)
+			add = 500
+			country_uses_bio_ships = no
+			has_technology = tech_starbase_3
+			any_owned_starbase = {
+				has_starbase_size = starbase_starport
+				can_be_upgraded = yes
+			}
+		}
+		# Bioship Starhold costs 500 alloys - base 500 is sufficient, no add needed
+		modifier = {
+			# Allow saving enough for a Starfortress (2500 alloys)
+			add = 2000
+			country_uses_bio_ships = no
+			has_technology = tech_starbase_4
+			any_owned_starbase = {
+				has_starbase_size = starbase_starhold
+				can_be_upgraded = yes
+			}
+		}
+		modifier = {
+			# Allow saving enough for a Bioship Starfortress (1250 alloys)
+			add = 750
+			country_uses_bio_ships = yes
+			has_technology = tech_starbase_4
+			any_owned_starbase = {
+				has_starbase_size = starbase_starhold
+				can_be_upgraded = yes
+			}
+		}
+		modifier = {
+			# Allow saving enough for a Citadel (5000 alloys)
+			add = 4500
+			country_uses_bio_ships = no
+			has_technology = tech_starbase_5
+			any_owned_starbase = {
+				has_starbase_size = starbase_starfortress
+				can_be_upgraded = yes
+			}
+		}
+		modifier = {
+			# Allow saving enough for a Bioship Citadel (2500 alloys)
+			add = 2000
+			country_uses_bio_ships = yes
+			has_technology = tech_starbase_5
+			any_owned_starbase = {
+				has_starbase_size = starbase_starfortress
+				can_be_upgraded = yes
+			}
+		}
+		modifier = {
+			# Allow saving enough for an Arkship tier 2 upgrade (5000 alloys)
+			add = 5000
+			is_nomadic = yes
+			has_technology = tech_arkship_tier_2
+			any_owned_starbase = {
+				is_arkship_starbase = yes
+				can_be_upgraded = yes
+			}
+		}
+		modifier = {
+			# Allow saving enough for an Arkship tier 3 upgrade (5000 alloys)
+			add = 5000
+			is_nomadic = yes
+			has_technology = tech_arkship_tier_3
+			any_owned_starbase = {
+				is_arkship_starbase = yes
+				can_be_upgraded = yes
+			}
+		}
+		modifier = {
+			add = 5000
+			has_ascension_perk = ap_cosmogenesis
+		}
+	}
+	desired_min = {
+		base = 300
+	}
+}
+
+alloys_expenditure_starbases_expand = {
+	resource = alloys
+	type = expenditure
+	category = starbases
+
+	potential = {
+		sapient_expansion_wanted = yes
+		# SapientAI: was `highest_threat < 50` — highest_threat only rises AFTER
+		# aggression happens (see 20_sapient_world_triggers.txt), so it never
+		# paused expansion when it mattered. Use our intent+power ladder instead:
+		# pause frontier outposts once someone credibly intends to attack (or we
+		# are prepping our own offensive and want alloys on the fleet).
+		sapient_threat_alarmed = no
+		NOT = {
+			is_country_type = fallen_empire
+			is_country_type = awakened_fallen_empire
+		}
+		# SapientAI: vanilla disabled outpost spending whenever ANY colonization
+		# (or wilderness terraform) plan was queued. For empires whose colony
+		# ships cost this same resource that deadlocks: the colony target can
+		# sit outside borders, needing the outpost this entry is forbidden from
+		# funding (observed: Rogue Servitor hoarding alloys, zero expansion).
+		# Plans now only suppress expansion while the empire cannot afford both.
+		OR = {
+			NOT = { sapient_colonization_underway = yes }
+			has_resource = { type = alloys amount > 800 }
+		}
+		has_resource = { type = influence amount > 75 }
+	}
+
+	weight = {
+		weight = 0.2
+
+		# Biological Starbases use less alloys
+		modifier = {
+			factor = 0.5
+			country_uses_bio_ships = yes
+		}
+	}
+
+	desired_min = {
+		# SapientAI: raised from vanilla 150 — reserve for a QUEUE of outposts
+		# (~90-130 alloys each), not one, while the expansion phase runs.
+		base = 250
+	}
+}
+
+alloys_expenditure_ships = {
+	resource = alloys
+	type = expenditure
+	category = ships
+
+	potential = {
+		always = yes
+	}
+
+	weight = {
+		weight = 0.6
+
+		# SapientAI expansion-phase gate. TESTED twice:
+		#   factor 0.1 failed — 10 corvettes built anyway. Mechanism: when
+		#   sibling categories sit at desired_max (starbases 500), OVERFLOW
+		#   redistributes by weight among uncapped categories; ships absorbed
+		#   it all despite a tiny share (observed trigger: 610 = 500 + one
+		#   corvette). Zero weight receives zero redistribution — surplus
+		#   pools in the bank instead, which climbs through the expansion
+		#   band and releases at 800: the stockpile IS the phase signal.
+		#   Ships exist only when alloys accumulate faster than expansion
+		#   can spend them. War or threat releases immediately.
+		modifier = {
+			factor = 0
+			sapient_threat_wary = no
+			has_resource = { type = alloys amount < 800 }
+			# frontier scan last: lazy AND means rich empires exit before it
+			sapient_expansion_wanted = yes
+		}
+
+		# Graduated war escalation (replaces the flat is_at_war x3). Mutually-
+		# exclusive threat bands ramp ship spending up to the at-war peak; the
+		# lower rungs are suppressed while recently_lost_war so the rebuild boost
+		# (peak) never double-multiplies with them.
+		modifier = {
+			factor = @sapient_ship_war_wary
+			sapient_threat_wary = yes
+			sapient_threat_alarmed = no
+			recently_lost_war = no
+		}
+		modifier = {
+			factor = @sapient_ship_war_alarmed
+			sapient_threat_alarmed = yes
+			sapient_threat_mobilizing = no
+			recently_lost_war = no
+		}
+		modifier = {
+			factor = @sapient_ship_war_mobilizing
+			sapient_threat_mobilizing = yes
+			sapient_threat_war = no
+			recently_lost_war = no
+		}
+		modifier = {
+			factor = @sapient_ship_war_peak
+			OR = {
+				sapient_threat_war = yes
+				recently_lost_war = yes
+			}
+		}
+
+		# spend less alloys on ships if over capacity
+		modifier = {
+			factor = 0.75
+			used_naval_capacity_percent >= 1.0
+		}
+
+		# Biological Ships use less alloys
+		modifier = {
+			factor = 0.33
+			country_uses_bio_ships = yes
+		}
+
+		modifier = {
+			factor = 5
+			used_naval_capacity_percent < 1.5
+			OR = {
+				any_neighbor_country = {
+					has_ascension_perk = ap_become_the_crisis
+				}
+				any_country = {
+					is_crisis_faction = yes
+				}
+			}
+		}
+	}
+
+	desired_min = {
+		base = 0
+
+		modifier = {
+			add = @ai_ship_budget_desired_min_per_year
+			country_uses_bio_ships = no
+		}
+
+		modifier = {
+			factor = trigger:years_passed
+		}
+
+		# SapientAI: desired_min is a guideline OVERRIDE of the fraction
+		# system — it would keep dripping ship allocation past a zero
+		# weight. Zeroed under the same expansion-phase gates.
+		modifier = {
+			factor = 0
+			sapient_threat_wary = no
+			has_resource = { type = alloys amount < 800 }
+			# frontier scan last: lazy AND means rich empires exit before it
+			sapient_expansion_wanted = yes
+		}
+	}
+}
+
+alloys_expenditure_colonies_expand = {
+	resource = alloys
+	type = expenditure
+	category = colonies
+
+	potential = {
+		is_nomadic = no
+		sapient_colonization_underway = yes
+		OR = {
+			AND = {
+				is_lithoid_empire = no
+				is_infernal_empire = no
+				OR = {
+					AND = {
+						country_uses_bio_ships = no
+						has_resource = { type = food amount > 400 }
+					}
+					AND = {
+						country_uses_bio_ships = yes
+						has_resource = { type = food amount > 600 }
+					}
+				}
+			}
+			AND = {
+				is_lithoid_empire = yes
+				has_resource = { type = minerals amount > 400 }
+			}
+			AND = {
+				is_robot_empire = yes
+				has_resource = { type = energy amount > 400 }
+			}
+			}
+	}
+
+	weight = {
+		weight = 0.5
+	}
+	desired_min = {
+		base = 0
+		modifier = {
+			add = @colony_cost_base
+			is_guided_sapience_empire = no
+			is_virtual_empire = no
+		}
+		modifier = {
+			add = @colony_cost_low
+			is_guided_sapience_empire = no
+			is_virtual_empire = yes
+		}
+		modifier = {
+			add = @colony_cost_mid
+			is_guided_sapience_empire = yes
+			is_virtual_empire = no
+		}
+		modifier = {
+			add = @colony_cost_base
+			is_guided_sapience_empire = yes
+			is_virtual_empire = yes
+		}
+		modifier = {
+			mult = 0.5
+			has_origin = origin_tree_of_life
+		}
+		modifier = {
+			mult = 0.5
+			country_uses_bio_ships = yes
+		}
+	}
+
+	desired_max = {
+		base = 0
+		modifier = {
+			add = @colony_cost_base_max
+			is_guided_sapience_empire = no
+			is_virtual_empire = no
+		}
+		modifier = {
+			add = @colony_cost_low_max
+			is_guided_sapience_empire = no
+			is_virtual_empire = yes
+		}
+		modifier = {
+			add = @colony_cost_mid_max
+			is_guided_sapience_empire = yes
+			is_virtual_empire = no
+		}
+		modifier = {
+			add = @colony_cost_base_max
+			is_guided_sapience_empire = yes
+			is_virtual_empire = yes
+		}
+		modifier = {
+			mult = 0.5
+			has_origin = origin_tree_of_life
+		}
+		modifier = {
+			mult = 0.5
+			country_uses_bio_ships = yes
+		}
+	}
+}
+
+alloys_expenditure_colonies_infernal_expand = {
+	resource = alloys
+	type = expenditure
+	category = colonies
+
+	potential = {
+		# SapientAI: audit finding — like the lithoid entry, no colonization
+		# gate at all: permanent colony-ship reservation. Same trigger as all
+		# sibling colony entries.
+		sapient_colonization_underway = yes
+		is_nomadic = no
+		is_infernal_empire = yes
+		NOT = {
+			has_origin = origin_synthetic_fertility
+		}
+		has_resource = { type = alloys amount > 400 }
+	}
+
+	weight = {
+		weight = 0.8
+	}
+
+	desired_min = {
+		base = 300
+	}
+
+	desired_max = {
+		base = 350
+	}
+}
+
+# --- Ported from vanilla: highest_threat / calendar checks replaced with
+# --- the sapient ladder. Otherwise verbatim vanilla.
+
+alloys_expenditure_armies_threatened = {
+	resource = alloys
+	type = expenditure
+	category = armies
+
+	potential = {
+		country_uses_bio_ships = no
+		is_nomadic = yes
+		# SapientAI: was `highest_threat > 20` — fires only after aggression
+		# already happened. wary = the 20-50 threat rung on our intent+power
+		# ladder (20_sapient_world_triggers.txt), so defense armies fund BEFORE
+		# the war, when a credible equal dislikes or targets us.
+		sapient_threat_wary = yes
+	}
+
+	weight = {
+		weight = 0.1
+	}
+}
+
+alloys_expenditure_megastructures_waystations = {
+	resource = alloys
+	type = expenditure
+	category = megastructures_waystations
+
+	potential = {
+		is_nomadic = yes
+		# SapientAI: was `highest_threat < 50` — see armies_threatened note.
+		# alarmed = the 50-80 rung; pause waystation building once someone
+		# credibly intends to attack (or we are prepping our own offensive).
+		sapient_threat_alarmed = no
+		has_technology = tech_waystation_1
+	}
+
+	weight = {
+		weight = 0.4
+
+		# Waystations use starbase capacity. Reduce budget when over capacity.
+		modifier = {
+			factor = 0.5
+			used_starbase_capacity_percent >= 1
+		}
+		modifier = {
+			factor = 0.1
+			used_starbase_capacity_percent >= 1.25
+		}
+		modifier = {
+			factor = 0
+			used_starbase_capacity_percent >= 2.0
+		}
+	}
+
+	desired_min = {
+		base = @waystation_cost_alloys_250
+		modifier = {
+			mult = 0.5
+			country_uses_bio_ships = yes
+		}
+	}
+
+	desired_max = {
+		base = @waystation_cost_alloys_250
+		modifier = {
+			mult = 0.5
+			country_uses_bio_ships = yes
+		}
+	}
+}
+
+alloys_expenditure_habitats = {
+	resource = alloys
+	type = expenditure
+	category = megastructures_habitat
+
+	potential = { ai_should_build_habitats = yes }
+
+	weight = {
+		weight = 0.2
+		modifier = {
+			factor = 2
+			is_void_dweller_empire = yes
+		}
+		modifier = {
+			factor = 2
+			is_void_dweller_empire = yes
+			count_owned_planet = {
+				limit = { is_planet_class = pc_habitat }
+				count < 4
+			}
+		}
+		modifier = {
+			factor = 2
+			is_void_dweller_empire = yes
+			count_owned_planet = {
+				limit = { is_planet_class = pc_habitat }
+				count < 6
+			}
+		}
+		modifier = {
+			factor = 5
+			# SapientAI: was `mid_game_years_passed > 0` — the calendar was a
+			# proxy for "out of real planets to settle"; use the actual signal.
+			NOT = { sapient_colonization_underway = yes }
+			num_owned_colonies < 12
+		}
+		modifier = {
+			factor = 0.5
+			has_trait = trait_aquatic
+		}
+		modifier = { #Build fortress habitats
+			factor = 2
+			used_naval_capacity_percent > 0.95
+			used_starbase_capacity_percent >= 1
+		}
+		modifier = {
+			factor = 0.5
+			is_at_war = yes
+		}
+	}
+
+	desired_min = {
+		base = 1000
+	}
+	desired_max = {
+		base = 1500
+	}
+}

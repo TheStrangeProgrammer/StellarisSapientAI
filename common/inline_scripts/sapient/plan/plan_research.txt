@@ -1,351 +1,69 @@
-# SapientAI — research chains (three verified input archetypes)
-# calculator_* jobs, all disciplines: individualist 1.5 CG, machine 3 energy,
-# hive 4 minerals — each per 3 research; hive input is lithoid-INDEPENDENT.
-# IN_STEP per 10 research x1.25 buffer: CG 6 | energy 13 | minerals 17.
-# Lab SR tiers: physics motes; society/engineering gases.
-
+# Research — base floor for all (three disciplines). Below the colony-split
+# threshold ONE unified scaling lane moves all three in lockstep (keeps small
+# empires on generic research designations); above it, per-discipline lanes let
+# planets specialize.
+#
+# The old `add = 100 sapient_research_arc` weight was meant to boost research
+# priority for arc empires (>=4 perks or servitor). Inert, and unnecessary:
+# scaling lanes don't compete by weight, and unity scaling already self-stops at
+# the perk cap (see plan_unity), so research naturally continues alone afterward.
+# Weight removed. Note: research scaling has no income/stockpile cap of its own —
+# it is bounded only by the "fulfilled" check. Flagged for a later pass if the
+# late-game research treadmill needs its own ceiling.
+# Base Research floor (all three disciplines) is UNCONDITIONAL, so it lives in the
+# top-level income block of 01_base.txt (vanilla puts research there too). Only the
+# scaling lanes remain here.
+# Unified lane (<10 planets) scales at two rates by arc, mirroring unity. Only
+# this lane is arc-tuned: at >=10 planets the split lanes below run all three
+# disciplines at full step (triple demand), which already dominates.
+#
+# RESEARCH ARC (4th perk onward, or servitor): research is the priority — higher.
 subplan = {
-	set_name = "Sapient Research SR Bootstrap (Gases)"
+	scaling = yes
+	set_name = "Scaling Research (Unified, Research Arc)"
 	potential = {
-		OR = {
-			has_technology = tech_society_2
-			has_technology = tech_basic_science_lab_2
-		}
+		NOT = { sapient_research_split = yes }
+		sapient_research_arc = yes
 	}
 	income = {
-		exotic_gases = 3
+		physics_research = @sapient_research_step_unified_research_arc
+		society_research = @sapient_research_step_unified_research_arc
+		engineering_research = @sapient_research_step_unified_research_arc
 	}
 }
 
-inline_script = {
-	script = sapient/production_chain
-	NAME = "Sapient Physics Chain (CG)"
-	GATE = sapient_research_input_is_cg
-	OUTPUT = physics_research
-	INPUT = consumer_goods
-	OUT_STEP = 10
-	IN_STEP = 6
-	OUT_LIMIT = @sapient_research_ceiling
+# UNITY ARC (before the 4th perk, non-servitor): downgraded so unity leads.
+subplan = {
+	scaling = yes
+	set_name = "Scaling Research (Unified, Unity Arc)"
+	potential = {
+		NOT = { sapient_research_split = yes }
+		sapient_unity_arc = yes
+	}
+	income = {
+		physics_research = @sapient_research_step_unified_unity_arc
+		society_research = @sapient_research_step_unified_unity_arc
+		engineering_research = @sapient_research_step_unified_unity_arc
+	}
 }
 
-inline_script = {
-	script = sapient/production_chain_sr
-	NAME = "Sapient Physics T1 (CG)"
-	GATE = sapient_res_physics_cg_t1
-	OUTPUT = physics_research
-	INPUT = consumer_goods
-	SR = volatile_motes
-	SR_STEP = 1
-	OUT_STEP = 10
-	IN_STEP = 6
-	OUT_LIMIT = @sapient_research_ceiling
+subplan = {
+	scaling = yes
+	set_name = "Scaling physics"
+	potential = { sapient_research_split = yes }
+	income = { physics_research = @sapient_research_step }
 }
 
-inline_script = {
-	script = sapient/production_chain_sr
-	NAME = "Sapient Physics T2 (CG)"
-	GATE = sapient_res_physics_cg_t2
-	OUTPUT = physics_research
-	INPUT = consumer_goods
-	SR = volatile_motes
-	SR_STEP = 1
-	OUT_STEP = 10
-	IN_STEP = 6
-	OUT_LIMIT = @sapient_research_ceiling
+subplan = {
+	scaling = yes
+	set_name = "Scaling society"
+	potential = { sapient_research_split = yes }
+	income = { society_research = @sapient_research_step }
 }
 
-inline_script = {
-	script = sapient/production_chain
-	NAME = "Sapient Physics Chain (ENERGY)"
-	GATE = sapient_research_input_is_energy
-	OUTPUT = physics_research
-	INPUT = energy
-	OUT_STEP = 10
-	IN_STEP = 13
-	OUT_LIMIT = @sapient_research_ceiling
-}
-
-inline_script = {
-	script = sapient/production_chain_sr
-	NAME = "Sapient Physics T1 (ENERGY)"
-	GATE = sapient_res_physics_energy_t1
-	OUTPUT = physics_research
-	INPUT = energy
-	SR = volatile_motes
-	SR_STEP = 1
-	OUT_STEP = 10
-	IN_STEP = 13
-	OUT_LIMIT = @sapient_research_ceiling
-}
-
-inline_script = {
-	script = sapient/production_chain_sr
-	NAME = "Sapient Physics T2 (ENERGY)"
-	GATE = sapient_res_physics_energy_t2
-	OUTPUT = physics_research
-	INPUT = energy
-	SR = volatile_motes
-	SR_STEP = 1
-	OUT_STEP = 10
-	IN_STEP = 13
-	OUT_LIMIT = @sapient_research_ceiling
-}
-
-inline_script = {
-	script = sapient/production_chain
-	NAME = "Sapient Physics Chain (MINERALS)"
-	GATE = sapient_research_input_is_minerals
-	OUTPUT = physics_research
-	INPUT = minerals
-	OUT_STEP = 10
-	IN_STEP = 17
-	OUT_LIMIT = @sapient_research_ceiling
-}
-
-inline_script = {
-	script = sapient/production_chain_sr
-	NAME = "Sapient Physics T1 (MINERALS)"
-	GATE = sapient_res_physics_minerals_t1
-	OUTPUT = physics_research
-	INPUT = minerals
-	SR = volatile_motes
-	SR_STEP = 1
-	OUT_STEP = 10
-	IN_STEP = 17
-	OUT_LIMIT = @sapient_research_ceiling
-}
-
-inline_script = {
-	script = sapient/production_chain_sr
-	NAME = "Sapient Physics T2 (MINERALS)"
-	GATE = sapient_res_physics_minerals_t2
-	OUTPUT = physics_research
-	INPUT = minerals
-	SR = volatile_motes
-	SR_STEP = 1
-	OUT_STEP = 10
-	IN_STEP = 17
-	OUT_LIMIT = @sapient_research_ceiling
-}
-
-inline_script = {
-	script = sapient/production_chain
-	NAME = "Sapient Society Chain (CG)"
-	GATE = sapient_research_input_is_cg
-	OUTPUT = society_research
-	INPUT = consumer_goods
-	OUT_STEP = 10
-	IN_STEP = 6
-	OUT_LIMIT = @sapient_research_ceiling
-}
-
-inline_script = {
-	script = sapient/production_chain_sr
-	NAME = "Sapient Society T1 (CG)"
-	GATE = sapient_res_society_cg_t1
-	OUTPUT = society_research
-	INPUT = consumer_goods
-	SR = exotic_gases
-	SR_STEP = 1
-	OUT_STEP = 10
-	IN_STEP = 6
-	OUT_LIMIT = @sapient_research_ceiling
-}
-
-inline_script = {
-	script = sapient/production_chain_sr
-	NAME = "Sapient Society T2 (CG)"
-	GATE = sapient_res_society_cg_t2
-	OUTPUT = society_research
-	INPUT = consumer_goods
-	SR = exotic_gases
-	SR_STEP = 1
-	OUT_STEP = 10
-	IN_STEP = 6
-	OUT_LIMIT = @sapient_research_ceiling
-}
-
-inline_script = {
-	script = sapient/production_chain
-	NAME = "Sapient Society Chain (ENERGY)"
-	GATE = sapient_research_input_is_energy
-	OUTPUT = society_research
-	INPUT = energy
-	OUT_STEP = 10
-	IN_STEP = 13
-	OUT_LIMIT = @sapient_research_ceiling
-}
-
-inline_script = {
-	script = sapient/production_chain_sr
-	NAME = "Sapient Society T1 (ENERGY)"
-	GATE = sapient_res_society_energy_t1
-	OUTPUT = society_research
-	INPUT = energy
-	SR = exotic_gases
-	SR_STEP = 1
-	OUT_STEP = 10
-	IN_STEP = 13
-	OUT_LIMIT = @sapient_research_ceiling
-}
-
-inline_script = {
-	script = sapient/production_chain_sr
-	NAME = "Sapient Society T2 (ENERGY)"
-	GATE = sapient_res_society_energy_t2
-	OUTPUT = society_research
-	INPUT = energy
-	SR = exotic_gases
-	SR_STEP = 1
-	OUT_STEP = 10
-	IN_STEP = 13
-	OUT_LIMIT = @sapient_research_ceiling
-}
-
-inline_script = {
-	script = sapient/production_chain
-	NAME = "Sapient Society Chain (MINERALS)"
-	GATE = sapient_research_input_is_minerals
-	OUTPUT = society_research
-	INPUT = minerals
-	OUT_STEP = 10
-	IN_STEP = 17
-	OUT_LIMIT = @sapient_research_ceiling
-}
-
-inline_script = {
-	script = sapient/production_chain_sr
-	NAME = "Sapient Society T1 (MINERALS)"
-	GATE = sapient_res_society_minerals_t1
-	OUTPUT = society_research
-	INPUT = minerals
-	SR = exotic_gases
-	SR_STEP = 1
-	OUT_STEP = 10
-	IN_STEP = 17
-	OUT_LIMIT = @sapient_research_ceiling
-}
-
-inline_script = {
-	script = sapient/production_chain_sr
-	NAME = "Sapient Society T2 (MINERALS)"
-	GATE = sapient_res_society_minerals_t2
-	OUTPUT = society_research
-	INPUT = minerals
-	SR = exotic_gases
-	SR_STEP = 1
-	OUT_STEP = 10
-	IN_STEP = 17
-	OUT_LIMIT = @sapient_research_ceiling
-}
-
-inline_script = {
-	script = sapient/production_chain
-	NAME = "Sapient Engineering Chain (CG)"
-	GATE = sapient_research_input_is_cg
-	OUTPUT = engineering_research
-	INPUT = consumer_goods
-	OUT_STEP = 10
-	IN_STEP = 6
-	OUT_LIMIT = @sapient_research_ceiling
-}
-
-inline_script = {
-	script = sapient/production_chain_sr
-	NAME = "Sapient Engineering T1 (CG)"
-	GATE = sapient_res_engineering_cg_t1
-	OUTPUT = engineering_research
-	INPUT = consumer_goods
-	SR = exotic_gases
-	SR_STEP = 1
-	OUT_STEP = 10
-	IN_STEP = 6
-	OUT_LIMIT = @sapient_research_ceiling
-}
-
-inline_script = {
-	script = sapient/production_chain_sr
-	NAME = "Sapient Engineering T2 (CG)"
-	GATE = sapient_res_engineering_cg_t2
-	OUTPUT = engineering_research
-	INPUT = consumer_goods
-	SR = exotic_gases
-	SR_STEP = 1
-	OUT_STEP = 10
-	IN_STEP = 6
-	OUT_LIMIT = @sapient_research_ceiling
-}
-
-inline_script = {
-	script = sapient/production_chain
-	NAME = "Sapient Engineering Chain (ENERGY)"
-	GATE = sapient_research_input_is_energy
-	OUTPUT = engineering_research
-	INPUT = energy
-	OUT_STEP = 10
-	IN_STEP = 13
-	OUT_LIMIT = @sapient_research_ceiling
-}
-
-inline_script = {
-	script = sapient/production_chain_sr
-	NAME = "Sapient Engineering T1 (ENERGY)"
-	GATE = sapient_res_engineering_energy_t1
-	OUTPUT = engineering_research
-	INPUT = energy
-	SR = exotic_gases
-	SR_STEP = 1
-	OUT_STEP = 10
-	IN_STEP = 13
-	OUT_LIMIT = @sapient_research_ceiling
-}
-
-inline_script = {
-	script = sapient/production_chain_sr
-	NAME = "Sapient Engineering T2 (ENERGY)"
-	GATE = sapient_res_engineering_energy_t2
-	OUTPUT = engineering_research
-	INPUT = energy
-	SR = exotic_gases
-	SR_STEP = 1
-	OUT_STEP = 10
-	IN_STEP = 13
-	OUT_LIMIT = @sapient_research_ceiling
-}
-
-inline_script = {
-	script = sapient/production_chain
-	NAME = "Sapient Engineering Chain (MINERALS)"
-	GATE = sapient_research_input_is_minerals
-	OUTPUT = engineering_research
-	INPUT = minerals
-	OUT_STEP = 10
-	IN_STEP = 17
-	OUT_LIMIT = @sapient_research_ceiling
-}
-
-inline_script = {
-	script = sapient/production_chain_sr
-	NAME = "Sapient Engineering T1 (MINERALS)"
-	GATE = sapient_res_engineering_minerals_t1
-	OUTPUT = engineering_research
-	INPUT = minerals
-	SR = exotic_gases
-	SR_STEP = 1
-	OUT_STEP = 10
-	IN_STEP = 17
-	OUT_LIMIT = @sapient_research_ceiling
-}
-
-inline_script = {
-	script = sapient/production_chain_sr
-	NAME = "Sapient Engineering T2 (MINERALS)"
-	GATE = sapient_res_engineering_minerals_t2
-	OUTPUT = engineering_research
-	INPUT = minerals
-	SR = exotic_gases
-	SR_STEP = 1
-	OUT_STEP = 10
-	IN_STEP = 17
-	OUT_LIMIT = @sapient_research_ceiling
+subplan = {
+	scaling = yes
+	set_name = "Scaling engineering"
+	potential = { sapient_research_split = yes }
+	income = { engineering_research = @sapient_research_step }
 }

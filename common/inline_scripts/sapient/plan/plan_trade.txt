@@ -1,72 +1,14 @@
-# SapientAI — trade demand
-# Trade has no input chain (clerk: 3 trade, zero upkeep) — its value is
-# downstream: market conversion supplements resources and SRs, and megacorps
-# monetize it directly. So: treadmills with per-identity ceilings, no chains.
-# The trade->SR supplement logic belongs to the BUDGET layer (market buys),
-# not the plan layer — noted for the budget rewrite.
-
+# Trade — the unconditional base floor is shared by ALL empires (trade is
+# consumed everywhere; gestalts produce it too, they're just not optimized for
+# it), so it lives in the top-level income block of 01_base.txt (vanilla puts
+# trade there too). Only the megacorp scaling lane remains here — megacorps build
+# their economy on trade as a growth engine.
 subplan = {
 	scaling = yes
-	set_name = "Sapient Trade Scaling"
-	potential = {
-		is_megacorp = no
-		is_gestalt = no
-		NOR = {
-			has_monthly_income = { resource = trade value >= @sapient_trade_ceiling }
-			resource_stockpile_compare = { resource = trade value > @economic_plan_stockpile_threshold_very_high }
-		}
-	}
-	income = {
-		trade = 10
-	}
-}
-
-subplan = {
-	scaling = yes
-	set_name = "Sapient Trade Scaling (Megacorp)"
+	set_name = "Scaling Trade (Megacorp)"
 	potential = {
 		is_megacorp = yes
-		NOR = {
-			has_monthly_income = { resource = trade value >= @sapient_trade_ceiling_megacorp }
-			resource_stockpile_compare = { resource = trade value > @economic_plan_stockpile_threshold_very_high }
-		}
+		NOT = { resource_stockpile_compare = { resource = trade value >= @sapient_trade_stock_cap } }
 	}
-	income = {
-		trade = 15
-	}
-}
-
-
-# Tier scaling: trade buildings past tier 1 upkeep rare_crystals, so tier
-# demand couples a crystal trickle (audit fix — we'd checked jobs, not
-# buildings; clerk is free but the megaplex is not).
-
-subplan = {
-	optional = yes
-	scaling = yes
-	set_name = "Sapient Trade T1"
-	potential = {
-		sapient_trade_t1 = yes
-		has_monthly_income = { resource = trade value < @sapient_trade_ceiling_megacorp }
-		meets_basic_resource_thresholds = yes
-	}
-	income = {
-		trade = 5
-		rare_crystals = 1
-	}
-}
-
-subplan = {
-	optional = yes
-	scaling = yes
-	set_name = "Sapient Trade T2"
-	potential = {
-		sapient_trade_t2 = yes
-		has_monthly_income = { resource = trade value < @sapient_trade_ceiling_megacorp }
-		meets_basic_resource_thresholds = yes
-	}
-	income = {
-		trade = 5
-		rare_crystals = 1
-	}
+	income = { trade = @sapient_trade_step }
 }

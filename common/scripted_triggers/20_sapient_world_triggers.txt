@@ -1,0 +1,173 @@
+# SapientAI — WORLD-STATE triggers
+# Colonization/expansion/threat/war-posture checks consumed by the budget
+# layer (ai_budget/*) and cross-cutting logic. Split from the old combined file.
+
+sapient_colonization_underway = {
+	ai_colonize_plans > 0
+	any_planet_within_border = {
+		is_colonizable = yes
+		is_colony = no
+	}
+}
+
+sapient_expansion_frontier = {
+	any_system_within_border = {
+		any_neighbor_system = {
+			NOT = { exists = space_owner }
+		}
+	}
+}
+
+sapient_expansion_wanted = {
+	OR = {
+		has_ai_expansion_plan = yes
+		sapient_expansion_frontier = yes
+	}
+}
+
+sapient_wilderness_terraform_planned = {
+	# ai_terraform_plans alone is unreliable (fires on intent/sight, same class
+	# as ai_colonize_plans) — pair it with a REAL in-border target, mirroring
+	# sapient_colonization_underway. Vanilla's own idiom for "actually
+	# terraforming" is any_planet_within_border = { is_terraforming = yes }.
+	is_wilderness_empire = yes
+	ai_terraform_plans > 0
+	any_planet_within_border = {
+		is_terraforming = yes
+	}
+}
+
+# ---- Offensive intent: is ROOT preparing to attack someone? ---------------
+# There's no engine-exposed "I am preparing war" trigger (ai_prepare_war is only
+# an intel snippet; ai_no_wars a flag). But the mirror of the defensive check
+# works: for defense we ask "does a neighbour hold the attack behaviour toward
+# US"; for offense we ask "does ROOT hold the attack behaviour toward a
+# neighbour" — root's own decision to go aggressive. Gated on root being at least
+# the target's equal, so we only gear up for a winnable offense, not a suicide run.
+sapient_preparing_offensive = {
+	any_neighbor_country = {
+		has_communications = root
+		# scope here = the neighbour; step into root and read root's attitude
+		# toward it (prev = the neighbour).
+		root = {
+			has_attitude_behavior = { target = prev behavior = attack }
+			relative_power = { who = prev category = fleet value >= equivalent }
+		}
+	}
+}
+
+# ---- Threat ladder, on AI INTENT + RELATIVE POWER (not highest_threat) -----
+# highest_threat was confirmed useless here: it only rises AFTER an empire acts
+# aggressively/conquers, so it never fires before a war. In-game test — an empire
+# with an active "AI preparing war" alert against it had ZERO threat tiers active.
+# The war-preparation alert itself is engine-hardcoded (gated behind the
+# intel_military_ai_prepare_war intel snippet), so we can't call it directly — but
+# its DRIVER is scriptable: an AI preparing war has an aggressive attitude toward
+# us, specifically the `attack` behavior. has_attitude_behavior{behavior=attack}
+# is the closest script proxy for "this empire intends to attack us."
+#
+# Gated on relative FLEET power so a pathetic empire's grudge doesn't mobilize us.
+# has_communications = root: can't read intent/power on an empire we haven't met.
+# Rungs nest and is_at_war folds into every rung, so a defender mobilizes fully
+# and the plan's cumulative war subplans stack:
+#   weaken-intent + equal      -> wary
+#   intends attack + equal     -> wary + alarmed
+#   intends attack + outguns us-> wary + alarmed + mobilizing
+#   shooting                   -> + the sapient_threat_war plan tier
+# Homicidals need no special case: the engine holds them at an attack-tier
+# attitude toward everyone, so an equivalent-or-stronger homicidal trips
+# alarmed via the normal path — and a WEAKER one deliberately does not (design
+# ruling: don't lock the AI into a forever-war stance over a devourer it
+# currently outguns; research matters more than paranoia).
+
+# MOBILIZING: an attacker that both intends to attack us AND outguns us -> war is
+# close and dangerous. (Base of the nest.)
+sapient_threat_mobilizing = {
+	OR = {
+		is_at_war = yes
+		any_neighbor_country = {
+			has_communications = root
+			has_attitude_behavior = { target = root behavior = attack }
+			relative_power = { who = root category = fleet value >= superior }
+		}
+	}
+}
+
+# ALARMED: a met neighbour that INTENDS to attack us (the war-prep proxy) and is
+# at least our military equal — OR we are preparing an offensive of our own, so we
+# want the war economy running before we declare.
+sapient_threat_alarmed = {
+	OR = {
+		is_at_war = yes
+		sapient_threat_mobilizing = yes
+		sapient_preparing_offensive = yes
+		any_neighbor_country = {
+			has_communications = root
+			has_attitude_behavior = { target = root behavior = attack }
+			relative_power = { who = root category = fleet value >= equivalent }
+		}
+	}
+}
+
+# WARY: a met neighbour of at least our fleet strength that holds the `weaken`
+# behaviour toward anyone-it-dislikes — per attitudes.txt that is exactly
+# {unfriendly, rival, threatened}: the undermine-us posture that precedes
+# hostility. (Old check was is_hostile/is_rival: hostile is an ATTACK-tier
+# attitude so that half duplicated the alarmed signal, and `unfriendly` — the
+# actual early-warning attitude — was missed entirely.) A weak grudge-holder
+# is still not a real threat. Ladder semantics now map 1:1 onto the engine's
+# behaviour escalation: weaken -> wary, attack+equal -> alarmed,
+# attack+superior -> mobilizing, shooting -> war.
+sapient_threat_wary = {
+	OR = {
+		is_at_war = yes
+		sapient_threat_alarmed = yes
+		any_neighbor_country = {
+			has_communications = root
+			has_attitude_behavior = { target = root behavior = weaken }
+			relative_power = { who = root category = fleet value >= equivalent }
+		}
+	}
+}
+
+# Top rung: the actual shooting state, named so the plans' at-war tier and any
+# other war-gated logic route through ONE editable condition. Just is_at_war for
+# now — widen here (e.g. war OR crisis-relations OR defensive-pact call) if you
+# ever need a custom "we are effectively at war" definition without touching the
+# plans.
+sapient_threat_war = {
+	is_at_war = yes
+}
+
+
+# DEPRECATED: superseded by the graduated tiers (sapient_threat_wary/alarmed/
+# mobilizing/war). No longer referenced by the plan, budget, or espionage layers
+# — all of which now use the specific rung they need. Kept defined (harmless) so
+# any external reference still resolves; safe to delete once you're sure nothing
+# else uses it. Equivalent to sapient_threat_wary now (wary already folds in war).
+sapient_threatened = {
+	OR = {
+		is_at_war = yes
+		sapient_threat_wary = yes
+	}
+}
+
+sapient_is_bioship_empire = {
+	country_uses_bio_ships = yes
+}
+
+sapientai_has_finished_ascension = {
+	OR = {
+		has_tradition = tr_cybernetics_finish
+		has_tradition = tr_genetics_finish
+		has_tradition = tr_cloning_finish
+		has_tradition = tr_mutation_finish
+		has_tradition = tr_purity_finish
+		has_tradition = tr_synthetics_finish
+		has_tradition = tr_psionics_finish
+		has_tradition = tr_psionics_shroud_finish
+		has_tradition = tr_modularity_finish
+		has_tradition = tr_nanotech_finish
+		has_tradition = tr_virtuality_finish
+	}
+}

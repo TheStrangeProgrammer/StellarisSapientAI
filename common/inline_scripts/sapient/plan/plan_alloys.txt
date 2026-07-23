@@ -1,115 +1,91 @@
-# SapientAI — alloy production chains
-# Coupled chains per input archetype (ratios from foundry_output.txt:
-# minerals 6->3 = 2.0, catalytic food 9->3.75 = 2.4; x1.25 latency buffer).
-# Bioship empires build ships from food (see plan_food) — their small remaining
-# alloy need keeps the vanilla subplan.
+# Alloys — bioships still buy full-price EQUIPMENT (weapons/armor/shields) in
+# alloys; only the hull is offloaded to food. So bioships get a lower base (10 vs
+# 15) and lower caps, but the SAME scaling step as normal shipbuilders. Nemesis
+# excluded (crisis ships aren't alloy-built).
+#
+# NOTE: subplan ai_weight is inert (vanilla 00_example.txt), so the old
+# per-subplan weight/deficit/threat modifiers were dead code and are removed.
+# Deficit priority is automatic: a base subplan is an always-added target, and
+# an unfulfilled target is what drives the AI to close the gap. War pressure is
+# re-expressed below as real (bounded) war subplans, not inert weights.
 
+# --- Base floors ----------------------------------------------------------
 subplan = {
 	set_name = "Base Alloys"
-	income = {
-		alloys = @economic_plan_alloy_target
+	potential = { sapient_is_bioship_empire = no }
+	income = { alloys = @sapient_alloys_base }
+}
+
+# Bioship alloy base: equipment only (hull is food) -> lower floor than normal.
+subplan = {
+	set_name = "Base Alloys (Bioship)"
+	potential = { sapient_is_bioship_empire = yes }
+	income = { alloys = @sapient_alloys_base_bioship }
+}
+
+# --- Peacetime treadmill --------------------------------------------------
+subplan = {
+	scaling = yes
+	set_name = "Scaling Alloys (Normal)"
+	potential = {
+		sapient_scales_alloys_normal = yes
+		NOT = { sapient_alloys_over_cap = yes }
 	}
-}
-
-inline_script = {
-	script = sapient/production_chain
-	NAME = "Sapient Alloy Chain (Minerals)"
-	GATE = sapient_industry_input_is_minerals
-	OUTPUT = alloys
-	INPUT = minerals
-	OUT_STEP = 10
-	IN_STEP = 25
-	OUT_LIMIT = @sapient_alloy_ceiling
-}
-
-inline_script = {
-	script = sapient/production_chain
-	NAME = "Sapient Alloy Chain (Food)"
-	GATE = sapient_industry_input_is_food
-	OUTPUT = alloys
-	INPUT = food
-	OUT_STEP = 10
-	IN_STEP = 30
-	OUT_LIMIT = @sapient_alloy_ceiling
+	income = { alloys = @sapient_alloys_step }
 }
 
 subplan = {
 	scaling = yes
-	set_name = "Bioship Alloy Scaling"
+	set_name = "Scaling Alloys (Bioship)"
 	potential = {
-		country_uses_bio_ships = yes
-		NOT = { has_ascension_perk = ap_become_the_crisis }
-		meets_basic_resource_thresholds = yes
-		has_monthly_income = { resource = alloys value < @economic_plan_scaling_alloy_bioship_limit }
+		sapient_scales_alloys_bioship = yes
+		NOT = { sapient_alloys_over_cap_bioship = yes }
 	}
-
-	income = {
-		alloys = 10
-	}
+	income = { alloys = @sapient_alloys_step_bioship }
 }
 
-# Tech stages: pressure follows tech_alloys_1/2 AND motes solvency; stage
-# chains couple motes so SR demand grows with scale. Bootstrap demand below
-# is tech-gated only — it exists precisely while insolvent, to fix that.
-
+# --- War escalation (normal shipbuilders) ---------------------------------
+# Real subplans: add a bounded amount on top of the base while the rung holds.
+# Cumulative (rungs nest). All @...=0 until tuned (see 10_sapient_variables).
 subplan = {
-	set_name = "Sapient Alloy SR Bootstrap"
-	potential = {
-		has_technology = tech_alloys_1
-	}
-	income = {
-		volatile_motes = 3
-	}
+	set_name = "War Alloys (Wary)"
+	potential = { sapient_scales_alloys_normal = yes  sapient_threat_wary = yes }
+	income = { alloys = @sapient_alloys_war_wary }
+}
+subplan = {
+	set_name = "War Alloys (Alarmed)"
+	potential = { sapient_scales_alloys_normal = yes  sapient_threat_alarmed = yes }
+	income = { alloys = @sapient_alloys_war_alarmed }
+}
+subplan = {
+	set_name = "War Alloys (Mobilizing)"
+	potential = { sapient_scales_alloys_normal = yes  sapient_threat_mobilizing = yes }
+	income = { alloys = @sapient_alloys_war_mobilizing }
+}
+subplan = {
+	set_name = "War Alloys (At War)"
+	potential = { sapient_scales_alloys_normal = yes  sapient_threat_war = yes }
+	income = { alloys = @sapient_alloys_war_atwar }
 }
 
-inline_script = {
-	script = sapient/production_chain_sr
-	NAME = "Sapient Alloy Chain T1 (Minerals)"
-	GATE = sapient_alloys_minerals_t1
-	OUTPUT = alloys
-	INPUT = minerals
-	SR = volatile_motes
-	OUT_STEP = 10
-	IN_STEP = 25
-	SR_STEP = 1
-	OUT_LIMIT = @sapient_alloy_ceiling
+# --- War escalation (bioship equipment) -----------------------------------
+subplan = {
+	set_name = "War Alloys Bio (Wary)"
+	potential = { sapient_scales_alloys_bioship = yes  sapient_threat_wary = yes }
+	income = { alloys = @sapient_alloys_war_wary_bio }
 }
-
-inline_script = {
-	script = sapient/production_chain_sr
-	NAME = "Sapient Alloy Chain T2 (Minerals)"
-	GATE = sapient_alloys_minerals_t2
-	OUTPUT = alloys
-	INPUT = minerals
-	SR = volatile_motes
-	OUT_STEP = 10
-	IN_STEP = 25
-	SR_STEP = 1
-	OUT_LIMIT = @sapient_alloy_ceiling
+subplan = {
+	set_name = "War Alloys Bio (Alarmed)"
+	potential = { sapient_scales_alloys_bioship = yes  sapient_threat_alarmed = yes }
+	income = { alloys = @sapient_alloys_war_alarmed_bio }
 }
-
-inline_script = {
-	script = sapient/production_chain_sr
-	NAME = "Sapient Alloy Chain T1 (Food)"
-	GATE = sapient_alloys_food_t1
-	OUTPUT = alloys
-	INPUT = food
-	SR = volatile_motes
-	OUT_STEP = 10
-	IN_STEP = 30
-	SR_STEP = 1
-	OUT_LIMIT = @sapient_alloy_ceiling
+subplan = {
+	set_name = "War Alloys Bio (Mobilizing)"
+	potential = { sapient_scales_alloys_bioship = yes  sapient_threat_mobilizing = yes }
+	income = { alloys = @sapient_alloys_war_mobilizing_bio }
 }
-
-inline_script = {
-	script = sapient/production_chain_sr
-	NAME = "Sapient Alloy Chain T2 (Food)"
-	GATE = sapient_alloys_food_t2
-	OUTPUT = alloys
-	INPUT = food
-	SR = volatile_motes
-	OUT_STEP = 10
-	IN_STEP = 30
-	SR_STEP = 1
-	OUT_LIMIT = @sapient_alloy_ceiling
+subplan = {
+	set_name = "War Alloys Bio (At War)"
+	potential = { sapient_scales_alloys_bioship = yes  sapient_threat_war = yes }
+	income = { alloys = @sapient_alloys_war_atwar_bio }
 }

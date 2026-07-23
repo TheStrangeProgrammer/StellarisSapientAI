@@ -1,0 +1,244 @@
+# SapientAI — PLAN triggers
+# Archetype gates and arc routing consumed by the economic plan scripts
+# (inline_scripts/sapient/plan/*). Split out from the old combined file.
+
+
+sapient_is_crisis = {
+	OR = {
+		is_crisis_faction = yes
+		has_ascension_perk = ap_become_the_crisis
+	}
+}
+
+sapient_scales_alloys_normal = {
+	sapient_is_bioship_empire = no
+	sapient_is_crisis = no
+}
+
+sapient_scales_alloys_bioship = {
+	sapient_is_bioship_empire = yes
+	sapient_is_crisis = no
+}
+
+# Empires that scale MINERALS for a fleet: Become-the-Crisis (crisis ships are
+# minerals, replacing alloy ships) and fauna-ship empires. Fauna are ADDITIVE —
+# voidworms/cutholoids/amoeba/tiyanki are built ALONGSIDE the empire's normal or
+# bio fleet (strong early, tanky buffers late), so a fauna empire keeps its alloy
+# (or bioship) scaling AND gets this minerals lane on top. Fauna hulls cost
+# minerals; voidworms + amoeba/tiyanki also cost food — see Scaling Food (Fauna).
+sapient_scales_minerals_fleet = {
+	OR = {
+		sapient_is_crisis = yes
+		uses_fauna_ship_sizes = yes
+	}
+}
+
+# Empires that push FOOD for their fleet in wartime: bioships (hull is food) and
+# fauna (voidworm/amoeba/tiyanki upkeep). Peacetime they scale food on separate
+# lanes (different steps), but the war tiers are shared — same wartime food ramp,
+# no need for a fauna-specific set of war variables.
+sapient_scales_food_fleet = {
+	OR = {
+		sapient_is_bioship_empire = yes
+		uses_fauna_ship_sizes = yes
+	}
+}
+
+sapient_unity_arc = {
+	num_ascension_perks < @sapient_unity_perk_cap
+	NOT = { has_valid_civic = civic_machine_servitor }
+}
+
+sapient_research_arc = {
+	OR = {
+		num_ascension_perks >= @sapient_unity_perk_cap
+		has_valid_civic = civic_machine_servitor
+	}
+}
+
+sapient_research_split = {
+	# meets_basic_resource_thresholds removed — our lowered budgets float far less
+	# than vanilla, so it rarely passed and the per-discipline split never engaged.
+	# Split now keys purely off colony count.
+	num_owned_planets >= @sapient_research_split_colonies
+}
+
+# --- Tech-tiered stockpile stops ------------------------------------------
+# True when the empire's bank exceeds the cap for its CURRENT ship-tech tier.
+# Titan tech checked first (highest cap), then battleship, then base.
+sapient_alloys_over_cap = {
+	OR = {
+		AND = { has_technology = tech_titans
+			resource_stockpile_compare = { resource = alloys value >= @sapient_alloy_cap_titan } }
+		AND = { has_technology = tech_battleships  NOT = { has_technology = tech_titans }
+			resource_stockpile_compare = { resource = alloys value >= @sapient_alloy_cap_battleship } }
+		AND = { NOT = { has_technology = tech_battleships }
+			resource_stockpile_compare = { resource = alloys value >= @sapient_alloy_cap_base } }
+	}
+}
+# Bioship hull tiers (own tech line): stinger(biggest)=titan-equiv,
+# harbinger=battleship-equiv, mauler/weaver=base.
+sapient_alloys_over_cap_bioship = {
+	OR = {
+		AND = { has_technology = tech_stingers
+			resource_stockpile_compare = { resource = alloys value >= @sapient_alloy_cap_titan_bio } }
+		AND = { has_technology = tech_harbingers  NOT = { has_technology = tech_stingers }
+			resource_stockpile_compare = { resource = alloys value >= @sapient_alloy_cap_battleship_bio } }
+		AND = { NOT = { has_technology = tech_harbingers }
+			resource_stockpile_compare = { resource = alloys value >= @sapient_alloy_cap_base_bio } }
+	}
+}
+sapient_minerals_over_cap = {
+	OR = {
+		AND = { has_technology = tech_titans
+			resource_stockpile_compare = { resource = minerals value >= @sapient_minerals_cap_titan } }
+		AND = { has_technology = tech_battleships  NOT = { has_technology = tech_titans }
+			resource_stockpile_compare = { resource = minerals value >= @sapient_minerals_cap_battleship } }
+		AND = { NOT = { has_technology = tech_battleships }
+			resource_stockpile_compare = { resource = minerals value >= @sapient_minerals_cap_base } }
+	}
+}
+# --- Tech-tiered BUFFER stops (basic-resource shock buffers) ---------------
+# Same idiom as the ship-tier stockpile stops above: highest tech rung checked
+# first, each lower rung excludes the ones above it. These cap the buffer
+# treadmills by ECONOMIC tech tier so early empires stop at a cushion they can
+# actually build (the flat caps were sized for a mid-game economy and ate the
+# early build order). Values are INCOME ceilings = base floor + buffer size;
+# derivations in 10_sapient_variables.
+# Rungs = the techs that unlock the planet-wide BOOST buildings (not the flat
+# +5% output techs): energy = tech_power_hub_1/2 (energy grid / energy nexus),
+# minerals = tech_mineral_purification_1/2 (purification plant / hub), fleet
+# food = tech_food_processing_1/2 (processing facility / center).
+sapient_energy_buffer_over_cap = {
+	OR = {
+		AND = { has_technology = tech_power_hub_2
+			has_monthly_income = { resource = energy value >= @sapient_energy_buffer_cap_t2 } }
+		AND = { has_technology = tech_power_hub_1  NOT = { has_technology = tech_power_hub_2 }
+			has_monthly_income = { resource = energy value >= @sapient_energy_buffer_cap_t1 } }
+		AND = { NOT = { has_technology = tech_power_hub_1 }
+			has_monthly_income = { resource = energy value >= @sapient_energy_buffer_cap_t0 } }
+	}
+}
+# NOTE (observer check): the gate techs have wilderness technology_swaps, but
+# they are icon-only (inherit_effects = yes) — has_technology should match the
+# base key. One glance at a wilderness AI to confirm.
+sapient_minerals_buffer_over_cap = {
+	OR = {
+		AND = { has_technology = tech_mineral_purification_2
+			has_monthly_income = { resource = minerals value >= @sapient_minerals_buffer_cap_t2 } }
+		AND = { has_technology = tech_mineral_purification_1  NOT = { has_technology = tech_mineral_purification_2 }
+			has_monthly_income = { resource = minerals value >= @sapient_minerals_buffer_cap_t1 } }
+		AND = { NOT = { has_technology = tech_mineral_purification_1 }
+			has_monthly_income = { resource = minerals value >= @sapient_minerals_buffer_cap_t0 } }
+	}
+}
+# Fleet-food buffer (bioship + fauna): food is their energy-equivalent, so it
+# gets the same tier shape. Ceilings are sized off the BIOSHIP base (25 pop +
+# 35 ship = 60); fauna empires have a lower food base, so they effectively get
+# a slightly larger cushion — acceptable, their fauna upkeep is food-heavy.
+sapient_food_fleet_buffer_over_cap = {
+	OR = {
+		AND = { has_technology = tech_food_processing_2
+			has_monthly_income = { resource = food value >= @sapient_food_fleet_buffer_cap_t2 } }
+		AND = { has_technology = tech_food_processing_1  NOT = { has_technology = tech_food_processing_2 }
+			has_monthly_income = { resource = food value >= @sapient_food_fleet_buffer_cap_t1 } }
+		AND = { NOT = { has_technology = tech_food_processing_1 }
+			has_monthly_income = { resource = food value >= @sapient_food_fleet_buffer_cap_t0 } }
+	}
+}
+
+# --- Purge windfall detection ---------------------------------------------
+# The windfall RESOURCE is decided by the purge job, not by what the purger's
+# fleet runs on (verified in vanilla common/pop_jobs/00_other_jobs.txt):
+#   purge_matrix              (machine purgers, any prey)      -> energy 6/pop
+#   purge_processing          (organic purgers, non-lithoid prey) -> food 6/pop
+#   purge_processing_lithoid  (organic purgers, LITHOID prey)  -> minerals 6/pop
+#   (labor camps pay food 3 + minerals 3 — half-size and mixed, not guarded)
+# So each guard arms on purger archetype + prey species + an income floor
+# saying the windfall is actually big enough to matter. Consumed by the
+# Purge Windfall Guard subplans in plan_energy / plan_food / plan_minerals.
+sapient_purge_windfall_energy = {
+	is_machine_empire = yes
+	any_owned_pop_group = { is_being_purged = yes }
+	has_monthly_income = { resource = energy value >= @sapient_purge_windfall_floor }
+}
+sapient_purge_windfall_food = {
+	is_machine_empire = no
+	any_owned_pop_group = { is_being_purged = yes  is_lithoid = no }
+	has_monthly_income = { resource = food value >= @sapient_purge_windfall_floor }
+}
+sapient_purge_windfall_minerals = {
+	is_machine_empire = no
+	any_owned_pop_group = { is_being_purged = yes  is_lithoid = yes }
+	has_monthly_income = { resource = minerals value >= @sapient_purge_windfall_floor }
+}
+
+sapient_food_over_cap_bioship = {
+	OR = {
+		AND = { has_technology = tech_stingers
+			resource_stockpile_compare = { resource = food value >= @sapient_food_cap_titan } }
+		AND = { has_technology = tech_harbingers  NOT = { has_technology = tech_stingers }
+			resource_stockpile_compare = { resource = food value >= @sapient_food_cap_battleship } }
+		AND = { NOT = { has_technology = tech_harbingers }
+			resource_stockpile_compare = { resource = food value >= @sapient_food_cap_base } }
+	}
+}
+# --- Resource-use gates (robust replacements for vanilla's country_uses_*) -----
+# Vanilla's country_uses_food / country_uses_consumer_goods are EXPENSE-based:
+# true whenever the empire is currently spending that resource, PLUS a "return true
+# if the economy is uninitialised" early-game branch. Both leak for machines:
+#   * every machine reads true during the uninitialised window, and
+#   * a normal machine / exterminator / fresh conqueror runs food (and sometimes
+#     CG) expenses off organic pops it is about to purge, displace or assimilate,
+#     spiking the trigger for a few months.
+# We don't want the AI building food/CG infrastructure it is about to not need, so
+# we keep the vanilla signal and subtract the machines that don't PERMANENTLY keep
+# the relevant consumers.
+
+# FOOD: kept by non-machines (organics, hives, catalytic, bioships) and by two
+# machine archetypes — Rogue Servitors (permanent organic bio-trophies) and Driven
+# Assimilators (a continuous pipeline of organics-in-assimilation that eat until
+# converted). Denied to every other machine (normal, exterminator), which only
+# hold organics transiently. (Assimilator kept in on purpose: excluding it risks a
+# real food deficit / starvation mid-assimilation, a worse failure than a small
+# overbuild. Drop the assimilator line if you consider that intake too transient.)
+sapient_uses_food = {
+	OR = {
+		# Pops that actually eat: organics/hives, plus the machine archetypes that
+		# permanently keep food-eating organics (rogue servitors' bio-trophies,
+		# driven assimilators' cyborg intake). Normal machines / exterminators are
+		# excluded (they only transiently hold organics).
+		AND = {
+			country_uses_food = yes
+			# NAND, not NOT: Clausewitz NOT with multiple triggers is NOR, which
+			# made this block a contradiction (non-machine AND both civics) and
+			# killed the pop-food branch for every organic empire. NAND = the
+			# intended "not (machine without either keeper civic)".
+			NAND = {
+				is_machine_empire = yes
+				NOT = { has_valid_civic = civic_machine_servitor }
+				NOT = { has_valid_civic = civic_machine_assimilator }
+			}
+		}
+		# Fauna FLEETS (voidworms/amoeba/tiyanki) burn food as hull + upkeep even
+		# for machine empires whose pops don't eat. A machine running fauna ships
+		# still needs the food plan to fire — otherwise it gets the fauna SCALING
+		# lane but no base food floor. This branch covers it.
+		uses_fauna_ship_sizes = yes
+	}
+}
+
+# CONSUMER GOODS: no gestalt uses CG EXCEPT machines with the Obsessional Directive
+# civic (vanilla's own exception). So: uses CG per vanilla, and not a gestalt other
+# than obsessional-directive. This also nulls the uninitialised-window false
+# positive for hives and machines, which the bare vanilla trigger leaves in.
+sapient_uses_consumer_goods = {
+	country_uses_consumer_goods = yes
+	# NAND, not NOT (NOT = NOR): the old block demanded non-gestalt WITH the
+	# obsessional civic — impossible — so NO empire ever got the CG floor.
+	# NAND = the intended "not (gestalt other than obsessional directive)".
+	NAND = {
+		is_gestalt = yes
+		NOT = { has_valid_civic = civic_machine_obsessional_directive }
+	}
+}

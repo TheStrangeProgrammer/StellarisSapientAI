@@ -1,49 +1,112 @@
-# SapientAI — naval capacity demand
-# Vanilla shipped ONE optional naval subplan for every empire. Split by intent
-# (all identifiers verified in vanilla 4.4.4):
-#   base        — everyone, non-optional: a navy is not optional in Stellaris
-#   militarist  — ethic_militarist / fanatic: extra standing ambition
-#   predatory   — is_homicidal (purifiers/swarm/exterminators), cordyceptic
-#                 drones, Nemesis: buildup starts EARLIER (lower used-capacity
-#                 threshold) and pulls harder; these empires are their fleets
+# Naval cap — reverted from the weight-0 diagnostic to a working state machine.
+# The diagnostic's question ("is a weight-0 subplan inert?") is already answered
+# by vanilla 00_example.txt: "ai_weights are NOT added from subplans." So weight
+# 0 and weight 100 behave identically, and naval cap climbs via `scaling = yes`
+# regardless of any weight. The real levers are the potential and the target.
+#
+# Why this matters (README section 2, stage 3): at naval cap, budget entries
+# divert alloys AWAY from ships into starbases/megastructures. Pulling the cap
+# up in wartime is what turns surplus alloy income into actual fleet.
 
+# --- Floor ----------------------------------------------------------------
+subplan = {
+	set_name = "Base Naval Cap"
+	naval_cap = @sapient_naval_base
+}
+
+# Homicidal top-up: homicidal civics carry country_naval_cap_mult (+33-50%),
+# so a purifier/swarm/exterminator starts around 65-100 cap — ABOVE the
+# universal 50 floor, which left their floor permanently pre-fulfilled and
+# expressing nothing. This stacks (+50) so their floor sits at 100, matching
+# the standing forces they actually begin with; the homicidal scaling lane
+# below then grows it from a meaningful baseline.
+subplan = {
+	set_name = "Base Naval Cap (Homicidal)"
+	potential = { is_homicidal = yes }
+	naval_cap = @sapient_naval_base_homicidal
+}
+
+# --- Peacetime treadmill --------------------------------------------------
+# Self-limiting: climbs one military-zone's worth (@sapient_naval_step) while the
+# empire is near its cap, and stops once used% falls below 0.85. NON-optional on
+# purpose (README step 4: the naval cap subplan was optional in vanilla, which let
+# naval growth never gate anything). If this freezes scaling for empires that
+# can't afford fleet, add `optional = yes`.
+# NOTE: meets_basic_resource_thresholds removed — our budgets float far less than
+# vanilla, so that gate almost never passed and naval never scaled for anyone.
 subplan = {
 	scaling = yes
-	set_name = "Sapient Naval Cap Scaling"
+	set_name = "Scaling Naval Cap"
 	potential = {
 		used_naval_capacity_percent > 0.85
-		meets_basic_resource_thresholds = yes
 	}
-	naval_cap = 100
+	naval_cap = @sapient_naval_step
 }
 
+# Homicidal empires (exterminators, fanatic purifiers, devouring swarms, ...) live
+# for war and should out-build everyone. This stacks ON TOP of the normal lane
+# (scaling subplans sum), and fires at a lower threshold (0.7 vs 0.85) so they push
+# naval cap earlier and harder — double scaling. Without it these empires barely
+# grew their cap.
 subplan = {
-	optional = yes
 	scaling = yes
-	set_name = "Sapient Naval Cap Scaling (Militarist)"
+	set_name = "Scaling Naval Cap (Homicidal)"
 	potential = {
-		OR = {
-			has_ethic = ethic_militarist
-			has_ethic = ethic_fanatic_militarist
-		}
-		used_naval_capacity_percent > 0.8
-		meets_basic_resource_thresholds = yes
-	}
-	naval_cap = 100
-}
-
-subplan = {
-	optional = yes
-	scaling = yes
-	set_name = "Sapient Naval Cap Scaling (Predatory)"
-	potential = {
-		OR = {
-			is_homicidal = yes
-			has_valid_civic = civic_hive_cordyceptic_drones
-			has_ascension_perk = ap_become_the_crisis
-		}
 		used_naval_capacity_percent > 0.7
-		meets_basic_resource_thresholds = yes
+		is_homicidal = yes
 	}
-	naval_cap = 200
+	naval_cap = @sapient_naval_step
+}
+
+# --- War escalation -------------------------------------------------------
+# SCALING lanes, one per threat rung (was: one-shot +N goals — fully stacked
+# they added +20 cap for an entire war, a rounding error next to the peacetime
+# treadmill; the fleet visibly under-scaled at war). Rungs NEST (war implies
+# mobilizing implies alarmed implies wary), so the number of live lanes — and
+# therefore the climb rate per re-add cycle — escalates with the rung:
+#   wary        : +wary                                    (near cap only)
+#   alarmed     : +wary +alarmed
+#   mobilizing  : +wary +alarmed +mobilizing
+#   at war      : +wary +alarmed +mobilizing +atwar
+# Each lane carries a used_naval_capacity_percent gate, graduated DOWN the
+# ladder: without one, a long war ratchets the cap goal far past what the AI
+# can fill and it chases the goal with fortress/soldier-job spam instead of
+# ships (same reason the treadmill and homicidal lanes are gated). Resource
+# war tiers stay non-scaling on purpose — income targets are absolute, so
+# they self-correct; naval cap is the one goal that must keep climbing.
+subplan = {
+	scaling = yes
+	set_name = "War Naval Cap (Wary)"
+	potential = {
+		sapient_threat_wary = yes
+		used_naval_capacity_percent > 0.85
+	}
+	naval_cap = @sapient_naval_war_wary
+}
+subplan = {
+	scaling = yes
+	set_name = "War Naval Cap (Alarmed)"
+	potential = {
+		sapient_threat_alarmed = yes
+		used_naval_capacity_percent > 0.8
+	}
+	naval_cap = @sapient_naval_war_alarmed
+}
+subplan = {
+	scaling = yes
+	set_name = "War Naval Cap (Mobilizing)"
+	potential = {
+		sapient_threat_mobilizing = yes
+		used_naval_capacity_percent > 0.75
+	}
+	naval_cap = @sapient_naval_war_mobilizing
+}
+subplan = {
+	scaling = yes
+	set_name = "War Naval Cap (At War)"
+	potential = {
+		sapient_threat_war = yes
+		used_naval_capacity_percent > 0.7
+	}
+	naval_cap = @sapient_naval_war_atwar
 }

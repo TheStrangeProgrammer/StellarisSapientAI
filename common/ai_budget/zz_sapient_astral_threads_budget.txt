@@ -1,0 +1,25 @@
+# SapientAI — astral threads budget overrides (same-name key replace).
+# Single port: threatened-armies activation onto the sapient ladder.
+
+astral_threads_expenditure_armies_threatened = {
+	resource = astral_threads
+	type = expenditure
+	category = armies
+
+	potential = {
+		has_astral_planes_dlc = yes
+		OR = {
+			has_country_flag = unlocked_warplings
+			has_country_flag = unlocked_flamestorm_troopers
+		}
+		# SapientAI: was `highest_threat > 20` — fires only after aggression
+		# already happened. wary = the 20-50 threat rung on our intent+power
+		# ladder (20_sapient_world_triggers.txt), so defense armies fund BEFORE
+		# the war, when a credible equal dislikes or targets us.
+		sapient_threat_wary = yes
+	}
+
+	weight = {
+		weight = 0.1
+	}
+}

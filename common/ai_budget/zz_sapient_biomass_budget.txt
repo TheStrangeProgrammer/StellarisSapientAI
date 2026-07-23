@@ -1,0 +1,25 @@
+# SapientAI — biomass budget overrides (same-name key replace).
+# NO plan-side biomass lane exists BY DECISION: nothing buildable produces
+# biomass (jobs/buildings/districts/deposits all checked — generation is
+# hardcoded/passive), so plan demand would be undrivable and a fixation trap.
+# Spend side: vanilla gated planet construction on stockpile >= 1000 — the
+# unity-7500 hoard pattern applied to wilderness districts. Gate lowered to
+# one-district affordability plus a small floor (dual-cost: districts also
+# pay minerals, covered by the construction lane).
+
+biomass_expenditure_planets = {
+	resource = biomass
+	type = expenditure
+	category = planets
+
+	potential = {
+		resource_stockpile_compare = { resource = biomass value >= 300 }
+	}
+
+	weight = {
+		weight = 0.8
+	}
+	desired_min = {
+		base = 200
+	}
+}

@@ -1,0 +1,12 @@
+# SapientAI — define overrides (defines merge per-key; global by nature,
+# used only where no scoped mechanism exists — these are pure AI builder
+# scoring, no gameplay-rule changes).
+
+NAI = {
+	# Vanilla: 0.01 — the builder scores pop growth and assembly buildings at
+	# ONE PERCENT of a normal building. This is why AI planets never get
+	# assembly plants (observed: Rogue Servitor) and why plan-side pops goals
+	# barely move construction: a 100:1 scoring headwind. Set to parity with
+	# admin/upgrade tier (2): assembly compounds into everything else.
+	AI_POPS_SCORE_MULT = 2
+}

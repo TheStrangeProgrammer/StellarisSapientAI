@@ -4,27 +4,23 @@
 
 basic_economy_plan = {
 	ai_weight = { weight = 1000 }
-
+	# Top-level income = UNCONDITIONAL floors only, mirroring vanilla ai_base
+	# (which puts alloys/research/unity/trade here). In THIS mod only alloys stays
+	# out — it's bioship-split (10/15) and can't be a single value, so it lives as
+	# subplans in plan_alloys. Unity, research, and trade are unconditional floors
+	# shared by every empire (gestalts produce trade too, just aren't optimized for
+	# it) and live here. Energy, minerals, food, cg, and SR are gated and carried
+	# by their own inline script's base subplan. (Zero entries removed — a 0 target
+	# is inert; vanilla lists only what it actually targets.)
 	income = {
-		alloys = @economic_plan_alloy_target
-		physics_research = @economic_plan_research_target
-		society_research = @economic_plan_research_target
-		engineering_research = @economic_plan_research_target
-		unity = @economic_plan_unity_target
-		trade = @economic_plan_trade_target
+		unity = @sapient_unity_base
+		trade = @sapient_trade_base
+		physics_research = @sapient_research_base
+		society_research = @sapient_research_base
+		engineering_research = @sapient_research_base
 	}
 
-	subplan = {
-		potential = {
-			is_nomadic = no
-		}
-		set_name = "Base Minerals"
-		income = {
-			minerals = @economic_plan_mineral_target
-		}
-	}
-
-	subplan = {
+subplan = {
 		potential = {
 			is_nomadic = yes
 		}
@@ -40,8 +36,8 @@ basic_economy_plan = {
 	inline_script = "sapient/plan/plan_food"
 	inline_script = "sapient/plan/plan_alloys"
 	inline_script = "sapient/plan/plan_cg"
-	inline_script = "sapient/plan/plan_research"
 	inline_script = "sapient/plan/plan_unity"
+	inline_script = "sapient/plan/plan_research"
 	inline_script = "sapient/plan/plan_trade"
 	inline_script = "sapient/plan/plan_pops"
 	inline_script = "sapient/plan/plan_naval"

@@ -1,0 +1,126 @@
+# SapientAI — influence budget overrides (same-name key replace).
+# Only the entries whose vanilla potentials used highest_threat or bare
+# has_ai_expansion_plan; everything else in 00_influence_budget.txt stays
+# vanilla-active. Ported checks -> sapient ladder, otherwise verbatim.
+
+influence_expenditure_stations = {
+	resource = influence
+	type = expenditure
+	category = stations
+
+	potential = {
+		is_nomadic = no
+		# SapientAI: was bare `has_ai_expansion_plan` — add the frontier check.
+		sapient_expansion_wanted = yes
+	}
+
+	weight = {
+		weight = 0.50
+	}
+
+	# min is 1 jump away
+	desired_min = {
+		base = 75
+	}
+
+	# max is 2 jumps away
+	desired_max = {
+		base = 150
+	}
+}
+
+influence_expenditure_megastructures_waystations = {
+	resource = influence
+	type = expenditure
+	category = megastructures_waystations
+
+	potential = {
+		is_nomadic = yes
+		# SapientAI: was `highest_threat < 50` — see armies_threatened note.
+		# alarmed = the 50-80 rung; pause waystation building once someone
+		# credibly intends to attack (or we are prepping our own offensive).
+		sapient_threat_alarmed = no
+		has_technology = tech_waystation_1
+	}
+
+	weight = {
+		weight = 0.3
+
+		# Waystations use starbase capacity. Reduce budget when over capacity.
+		modifier = {
+			factor = 0.5
+			used_starbase_capacity_percent >= 1
+		}
+		modifier = {
+			factor = 0.1
+			used_starbase_capacity_percent >= 1.25
+		}
+		modifier = {
+			factor = 0
+			used_starbase_capacity_percent >= 2.0
+		}
+	}
+
+	desired_min = {
+		base = @waystation_cost_influence_100
+	}
+
+	desired_max = {
+		base = @waystation_cost_influence_100
+	}
+}
+
+influence_expenditure_habitats = {
+	resource = influence
+	type = expenditure
+	category = megastructures_habitat
+
+	potential = { ai_should_build_habitats = yes }
+
+	weight = {
+		weight = 0.1
+		modifier = {
+			factor = 10
+			is_void_dweller_empire = yes
+		}
+		modifier = {
+			factor = 10
+			is_void_dweller_empire = yes
+			count_owned_planet = {
+				limit = { is_planet_class = pc_habitat }
+				count < 4
+			}
+		}
+		modifier = {
+			factor = 10
+			is_void_dweller_empire = yes
+			count_owned_planet = {
+				limit = { is_planet_class = pc_habitat }
+				count < 6
+			}
+		}
+		modifier = {
+			factor = 5
+			# SapientAI: was `mid_game_years_passed > 0` — the calendar was a
+			# proxy for "out of real planets to settle"; use the actual signal.
+			NOT = { sapient_colonization_underway = yes }
+			num_owned_colonies < 12
+		}
+		modifier = {
+			factor = 0.5
+			has_trait = trait_aquatic
+		}
+		modifier = { #Build fortress habitats
+			factor = 2
+			used_naval_capacity_percent > 0.95
+			used_starbase_capacity_percent >= 1
+		}
+	}
+
+	desired_min = {
+		base = 150
+	}
+	desired_max = {
+		base = 150
+	}
+}

@@ -1,0 +1,509 @@
+# SapientAI — food budget overrides (same-name key replace).
+# Station bands pulled from vanilla's 1500/3000 to the 500/2000 partition:
+# bioship / rock-tree empires pay food for stations and vanilla made them
+# hoard DOUBLE what mineral empires did before building — AND capped the
+# reserve at a flat desired_max = 150 on every tier, barely one station
+# (cost = @civilian_station_cost x @mineral_to_food_cost_ratio = 125 food).
+# Replaced with the shared station ladder (see zz_sapient_minerals_budget):
+# min 1x/2x/4x, max 2x/4x/8x station cost by tier — min ASCENDS with
+# wealth. Starbase entry gains a desired_min (vanilla has only the
+# Starhold-savings desired_max, so upgrades sat in fraction-accrual).
+
+food_expenditure_stations_low = {
+	resource = food
+	type = expenditure
+	category = stations
+
+	potential = {
+		is_nomadic = no
+		country_uses_bio_ships = yes
+		resource_stockpile_compare = { resource = food value < 500 }
+	}
+
+	weight = {
+		weight = 0.2
+	}
+	desired_min = {
+		base = 125
+	}
+	desired_max = {
+		base = 250
+	}
+}
+
+food_expenditure_stations_med = {
+	resource = food
+	type = expenditure
+	category = stations
+
+	potential = {
+		is_nomadic = no
+		country_uses_bio_ships = yes
+		resource_stockpile_compare = { resource = food value >= 500 }
+		resource_stockpile_compare = { resource = food value < 2000 }
+	}
+
+	weight = {
+		weight = 0.1
+	}
+	desired_min = {
+		base = 250
+	}
+	desired_max = {
+		base = 500
+	}
+}
+
+food_expenditure_stations_high = {
+	resource = food
+	type = expenditure
+	category = stations
+
+	potential = {
+		is_nomadic = no
+		country_uses_bio_ships = yes
+		resource_stockpile_compare = { resource = food value >= 2000 }
+	}
+
+	weight = {
+		weight = 0.05
+	}
+	desired_min = {
+		base = 500
+	}
+	desired_max = {
+		base = 1000
+	}
+}
+
+food_expenditure_starbases = {
+	resource = food
+	type = expenditure
+	category = starbases
+
+	potential = {
+		country_uses_bio_ships = yes
+		NOT = {
+			is_country_type = fallen_empire
+		}
+	}
+
+	weight = {
+		weight = 0.4
+
+		# spend more on starbase upgrades if at fleet cap
+		modifier = {
+			factor = 2
+			used_naval_capacity_percent >= 1.0
+		}
+
+		# Reduce spending on claiming new systems if we have unclaimed planets
+		modifier = {
+			is_machine_empire = yes
+			has_country_resource = { type = food amount < 450 }
+			factor = 0.25 # more aggresive saving for robots since their colony ships cost more
+			sapient_colonization_underway = yes
+		}
+		# Reduce spending on claiming new systems if we have unclaimed planets
+		modifier = {
+			is_machine_empire = no
+			has_country_resource = { type = food amount < 750 }
+			factor = 0.50
+			OR = {
+				sapient_colonization_underway = yes
+				sapient_wilderness_terraform_planned = yes
+			}
+		}
+
+		modifier = {
+			factor = 1.5
+			used_starbase_capacity_percent < 1
+			any_owned_starbase = {
+				can_be_upgraded = yes
+			}
+		}
+		modifier = {
+			factor = 1.5
+			OR = {
+				any_owned_starbase = {
+					NOT = { has_starbase_size = starbase_outpost }
+					can_be_upgraded = yes
+				}
+				any_owned_nonprimary_starbase = {
+					can_be_upgraded = yes
+				}
+			}
+		}
+	}
+	desired_max = {
+		base = 500
+		modifier = {
+			# Allow saving enough for a Starhold (1750 food)
+			add = 1250
+			has_technology = tech_starbase_3
+			any_owned_starbase = {
+				has_starbase_size = starbase_starport
+				can_be_upgraded = yes
+			}
+		}
+		modifier = {
+			# Allow saving enough for a Starfortress (4375 food)
+			add = 3875
+			has_technology = tech_starbase_4
+			any_owned_starbase = {
+				has_starbase_size = starbase_starhold
+				can_be_upgraded = yes
+			}
+		}
+		modifier = {
+			# Allow saving enough for a Citadel (8750 food)
+			add = 8250
+			has_technology = tech_starbase_5
+			any_owned_starbase = {
+				has_starbase_size = starbase_starfortress
+				can_be_upgraded = yes
+			}
+		}
+		modifier = {
+			add = 8750
+			has_ascension_perk = ap_cosmogenesis
+		}
+	}
+	desired_min = {
+		base = 500
+	}
+}
+
+food_expenditure_starbases_expand = {
+	resource = food
+	type = expenditure
+	category = starbases
+
+	potential = {
+		country_uses_bio_ships = yes
+		sapient_expansion_wanted = yes
+		# SapientAI: was `highest_threat < 50` — highest_threat only rises AFTER
+		# aggression happens (see 20_sapient_world_triggers.txt), so it never
+		# paused expansion when it mattered. Use our intent+power ladder instead:
+		# pause frontier outposts once someone credibly intends to attack (or we
+		# are prepping our own offensive and want alloys on the fleet).
+		sapient_threat_alarmed = no
+		NOR = {
+			is_country_type = fallen_empire
+			is_country_type = awakened_fallen_empire
+		}
+		# SapientAI: vanilla disabled outpost spending whenever ANY colonization
+		# (or wilderness terraform) plan was queued. For empires whose colony
+		# ships cost this same resource that deadlocks: the colony target can
+		# sit outside borders, needing the outpost this entry is forbidden from
+		# funding (observed: Rogue Servitor hoarding alloys, zero expansion).
+		# Plans now only suppress expansion while the empire cannot afford both.
+		OR = {
+			has_resource = { type = food amount > 1200 }
+			NOR = {
+				sapient_colonization_underway = yes
+				sapient_wilderness_terraform_planned = yes
+			}
+		}
+		has_resource = { type = influence amount > 75 }
+	}
+
+	weight = {
+		weight = 0.2
+	}
+
+	desired_min = {
+		base = 300
+	}
+}
+
+food_expenditure_colonies_expand = {
+	resource = food
+	type = expenditure
+	category = colonies
+
+	potential = {
+		is_nomadic = no
+		OR = {
+			country_uses_bio_ships = yes
+			AND = {
+				is_robot_empire = no
+				is_lithoid_empire = no
+				is_infernal_empire = no
+				NOT = {
+					has_origin = origin_synthetic_fertility
+				}
+			}
+			has_origin = origin_tree_of_life
+		}
+		sapient_colonization_underway = yes
+		has_resource = { type = food amount > 400 }
+		OR = {
+			country_uses_bio_ships = no
+			has_resource = { type = food amount > 600 } # Bioship colony ship costs 600 food (900 for hive)
+		}
+	}
+
+	weight = {
+		weight = 2.0
+	}
+
+	desired_min = {
+		base = 0
+		modifier = {
+			add = @colony_cost_base
+			is_hive_empire = no
+		}
+		modifier = {
+			add = @colony_cost_high
+			is_hive_empire = yes
+		}
+		modifier = {
+			add = @colony_cost_high
+			has_origin = origin_tree_of_life
+		}
+		modifier = {
+			add = @colony_cost_base
+			country_uses_bio_ships = yes
+			is_guided_sapience_empire = no
+			is_virtual_empire = no
+		}
+		modifier = {
+			add = @colony_cost_low
+			country_uses_bio_ships = yes
+			is_guided_sapience_empire = no
+			is_virtual_empire = yes
+		}
+		modifier = {
+			add = @colony_cost_mid
+			country_uses_bio_ships = yes
+			is_guided_sapience_empire = yes
+			is_virtual_empire = no
+		}
+		modifier = {
+			add = @colony_cost_base
+			country_uses_bio_ships = yes
+			is_guided_sapience_empire = yes
+			is_virtual_empire = yes
+		}
+		modifier = {
+			mult = 2
+			country_uses_bio_ships = yes
+		}
+	}
+
+	desired_max = {
+		base = 0
+		modifier = {
+			add = @colony_cost_base_max
+			is_hive_empire = no
+		}
+		modifier = {
+			add = @colony_cost_high_max
+			is_hive_empire = yes
+		}
+		modifier = {
+			add = @colony_cost_high_max
+			has_origin = origin_tree_of_life
+		}
+		modifier = {
+			add = @colony_cost_base_max
+			country_uses_bio_ships = yes
+			is_guided_sapience_empire = no
+			is_virtual_empire = no
+		}
+		modifier = {
+			add = @colony_cost_low_max
+			country_uses_bio_ships = yes
+			is_guided_sapience_empire = no
+			is_virtual_empire = yes
+		}
+		modifier = {
+			add = @colony_cost_mid_max
+			country_uses_bio_ships = yes
+			is_guided_sapience_empire = yes
+			is_virtual_empire = no
+		}
+		modifier = {
+			add = @colony_cost_base_max
+			country_uses_bio_ships = yes
+			is_guided_sapience_empire = yes
+			is_virtual_empire = yes
+		}
+		modifier = {
+			mult = 2
+			country_uses_bio_ships = yes
+		}
+	}
+}
+
+food_expenditure_colonies_expand_rock_tree = {
+	resource = food
+	type = expenditure
+	category = colonies
+
+	potential = {
+		is_nomadic = no
+		is_robot_empire = no
+		is_lithoid_empire = yes
+		has_origin = origin_tree_of_life
+		sapient_colonization_underway = yes
+		has_resource = { type = food amount > 400 }
+	}
+
+	weight = {
+		weight = 2.0
+	}
+
+	desired_min = {
+		base = @colony_cost_high
+	}
+
+	desired_max = {
+		base = @colony_cost_high_max
+	}
+}
+
+food_expenditure_ships = {
+	resource = food
+	type = expenditure
+	category = ships
+
+	potential = {
+		OR = {
+			uses_fauna_ship_sizes = yes
+			country_uses_bio_ships = yes
+		}
+	}
+
+	weight = {
+		weight = 0.6
+
+		# SapientAI expansion-phase gate (mirrors alloys ships; see that file
+		# for the tested overflow-redistribution rationale).
+		modifier = {
+			factor = 0
+			sapient_threat_wary = no
+			has_resource = { type = food amount < 1500 }
+			# frontier scan last: lazy AND means rich empires exit before it
+			sapient_expansion_wanted = yes
+		}
+
+		# Graduated war escalation (replaces the flat is_at_war x3). See alloys
+		# budget for the band rationale. Bioship food ships share the standard ramp.
+		modifier = {
+			factor = @sapient_ship_war_wary
+			sapient_threat_wary = yes
+			sapient_threat_alarmed = no
+			recently_lost_war = no
+		}
+		modifier = {
+			factor = @sapient_ship_war_alarmed
+			sapient_threat_alarmed = yes
+			sapient_threat_mobilizing = no
+			recently_lost_war = no
+		}
+		modifier = {
+			factor = @sapient_ship_war_mobilizing
+			sapient_threat_mobilizing = yes
+			sapient_threat_war = no
+			recently_lost_war = no
+		}
+		modifier = {
+			factor = @sapient_ship_war_peak
+			OR = {
+				sapient_threat_war = yes
+				recently_lost_war = yes
+			}
+		}
+
+		# spend less food on ships if over capacity
+		modifier = {
+			factor = 0.75
+			used_naval_capacity_percent >= 1.0
+		}
+
+		modifier = {
+			factor = 5
+			used_naval_capacity_percent < 1.5
+			OR = {
+				any_neighbor_country = {
+					has_ascension_perk = ap_become_the_crisis
+				}
+				any_country = {
+					is_crisis_faction = yes
+				}
+			}
+		}
+	}
+}
+
+# --- Ported from vanilla: highest_threat / calendar checks replaced with
+# --- the sapient ladder. Otherwise verbatim vanilla.
+
+food_expenditure_armies_threatened = {
+	resource = food
+	type = expenditure
+	category = armies
+
+	potential = {
+		country_uses_bio_ships = yes
+		# SapientAI: was `highest_threat > 20` — fires only after aggression
+		# already happened. wary = the 20-50 threat rung on our intent+power
+		# ladder (20_sapient_world_triggers.txt), so defense armies fund BEFORE
+		# the war, when a credible equal dislikes or targets us.
+		sapient_threat_wary = yes
+	}
+
+	weight = {
+		weight = 0.1
+	}
+}
+
+food_expenditure_megastructures_waystations = {
+	resource = food
+	type = expenditure
+	category = megastructures_waystations
+
+	potential = {
+		is_nomadic = yes
+		country_uses_bio_ships = yes
+		# SapientAI: was `highest_threat < 50` — see armies_threatened note.
+		# alarmed = the 50-80 rung; pause waystation building once someone
+		# credibly intends to attack (or we are prepping our own offensive).
+		sapient_threat_alarmed = no
+		has_technology = tech_waystation_1
+	}
+
+	weight = {
+		weight = 0.4
+
+		# Waystations use starbase capacity. Reduce budget when over capacity.
+		modifier = {
+			factor = 0.5
+			used_starbase_capacity_percent >= 1
+		}
+		modifier = {
+			factor = 0.1
+			used_starbase_capacity_percent >= 1.25
+		}
+		modifier = {
+			factor = 0
+			used_starbase_capacity_percent >= 2.0
+		}
+	}
+
+	desired_min = {
+		base = @waystation_cost_alloys_500
+		modifier = {
+			mult = @halved_alloy_to_food_cost_ratio
+		}
+	}
+
+	desired_max = {
+		base = @waystation_cost_alloys_500
+		modifier = {
+			mult = @halved_alloy_to_food_cost_ratio
+		}
+	}
+}

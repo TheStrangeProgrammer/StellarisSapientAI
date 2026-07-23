@@ -1,64 +1,77 @@
-# SapientAI — energy demand
-# Vanilla behavior relocated, with ONE change: the scaling rail. Vanilla capped
-# energy ambition at 100 — but building upkeep alone is 2/5/8 energy per tier
-# (@b1/2/3_upkeep), so a mature empire pays hundreds in maintenance before a
-# single ship. Rail raised to @sapient_energy_ceiling; still deliberately low
-# relative to alloys/research (energy is a utility, not a goal), and machine
-# empires' real energy demand rides the research/unity chain couplings, which
-# are uncapped by design. Nomad variants untouched.
-
+# Energy — base floor for all; pure-consumption resource, so the surplus target
+# already covers upkeep and rising upkeep raises the bar automatically. No
+# peacetime scaling (nothing dumps energy into growth). Wartime fleet upkeep for
+# standard/machine ships IS energy, so war tiers add a bounded top-up (bioships
+# burn food instead — see plan_food). Deficit priority is automatic (unfulfilled
+# target drives the fix); the old inert deficit/threat weights are removed.
 subplan = {
+	set_name = "Base Energy"
+	# is_nomadic=no matches vanilla ("Base Minerals & Energy" is nomad-gated).
+	# Without it, nomads would get this floor PLUS the nomad energy subplan in
+	# 01_base.txt on top (double-counted).
+	potential = { is_nomadic = no }
+	income = { energy = @sapient_energy_base }
+}
+
+# --- War escalation (standard/machine fleet upkeep, non-bioship) -----------
+# Cumulative real subplans, all @...=0 until tuned (see 10_sapient_variables).
+subplan = {
+	set_name = "War Energy (Wary)"
+	potential = { sapient_is_bioship_empire = no  sapient_threat_wary = yes }
+	income = { energy = @sapient_energy_war_wary }
+}
+subplan = {
+	set_name = "War Energy (Alarmed)"
+	potential = { sapient_is_bioship_empire = no  sapient_threat_alarmed = yes }
+	income = { energy = @sapient_energy_war_alarmed }
+}
+subplan = {
+	set_name = "War Energy (Mobilizing)"
+	potential = { sapient_is_bioship_empire = no  sapient_threat_mobilizing = yes }
+	income = { energy = @sapient_energy_war_mobilizing }
+}
+subplan = {
+	set_name = "War Energy (At War)"
+	potential = { sapient_is_bioship_empire = no  sapient_threat_war = yes }
+	income = { energy = @sapient_energy_war_atwar }
+}
+
+# --- Basic buffer treadmill (capped) --------------------------------------
+# Climbs one district at a time up to the tech-tiered ceiling (sapient_energy_buffer_over_cap), so the empire
+# carries a real surplus cushion instead of budgeting to a knife's edge. Stops at
+# the cap -- late game the buffer is noise, so it stops costing districts.
+subplan = {
+	scaling = yes
+	set_name = "Scaling Energy (Buffer)"
 	potential = {
 		is_nomadic = no
+		# Bioships pay FLEET upkeep in food, not energy, so a big energy cushion is
+		# dead weight for them — they get the food buffer instead (plan_food). They
+		# keep the flat Base Energy floor for building/pop upkeep.
+		sapient_is_bioship_empire = no
+		# Tech-tiered stop (was a flat 200 cap, which ate the early build
+		# order): 75/125/225 income ceiling by power-plant tech rung.
+		NOT = { sapient_energy_buffer_over_cap = yes }
 	}
-	set_name = "Base Energy"
-	income = {
-		energy = @economic_plan_energy_target
-	}
+	income = { energy = @sapient_energy_step }
 }
 
+# --- Purge windfall guard --------------------------------------------------
+# The buffer above measures net income, so a purge windfall SATISFIES it for
+# free and the treadmill idles while the ghost income lasts (see the guard
+# block in 10_sapient_variables for the full failure chain). This flat lane
+# arms only while a purge is running AND income is windfall-inflated, and
+# demands enough to push the target above the windfall — pure build pressure
+# that turns ghost income into districts, self-cancelling when the purge ends.
+# NOT a cap bypass: the tech-tiered treadmill stop above still stands.
+# Keyed to MACHINE purgers only — purge_matrix is the only purge job that
+# pays energy. An organic purifier's purge windfall is food (or minerals for
+# lithoid prey), so arming this guard for them would overbuild generators
+# during every purge for nothing. Mirror lanes: plan_food, plan_minerals.
 subplan = {
+	set_name = "Purge Windfall Guard (Energy)"
 	potential = {
-		is_nomadic = yes
+		sapient_purge_windfall_energy = yes
 	}
-	set_name = "Base Energy Nomads"
-	income = {
-		energy = @economic_plan_energy_target_nomads
-	}
-}
-
-subplan = {
-	scaling = yes
-	set_name = "Base Energy Scaling"
-	potential = {
-		OR = {
-			NOR = {
-				is_nomadic = yes
-				has_monthly_income = { resource = energy value >= @sapient_energy_ceiling }
-				resource_stockpile_compare = {
-					resource = energy
-					value > @economic_plan_stockpile_threshold_high
-				}
-			}
-		}
-	}
-
-	income = {
-		energy = 10
-	}
-}
-
-subplan = {
-	scaling = yes
-	set_name = "Base Energy Scaling Nomads"
-	potential = {
-		NOR = {
-			is_nomadic = no
-			has_monthly_income = { resource = energy value <= @sapient_energy_ceiling_nomads }
-		}
-	}
-
-	income = {
-		energy = -10
-	}
+	income = { energy = @sapient_purge_windfall_guard }
 }
